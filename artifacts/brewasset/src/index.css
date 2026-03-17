@@ -5,41 +5,41 @@
   --font-sans: 'DM Mono', monospace;
   --font-mono: 'DM Mono', monospace;
 
-  --color-background: 0 0% 4%;
-  --color-foreground: 40 20% 90%;
+  --color-background: #0a0a0a;
+  --color-foreground: #ede8df;
   
-  --color-surface: 0 0% 8%;
-  --color-surface2: 0 0% 12%;
+  --color-surface: #141414;
+  --color-surface2: #1f1f1f;
   
-  --color-border: 0 0% 16%;
-  --color-border2: 0 0% 20%;
+  --color-border: #292929;
+  --color-border2: #333333;
   
-  --color-primary: 38 82% 52%;
-  --color-primary-foreground: 0 0% 4%;
+  --color-primary: #e8a020;
+  --color-primary-foreground: #0a0a0a;
   
-  --color-secondary: 0 0% 15%;
-  --color-secondary-foreground: 40 20% 90%;
+  --color-secondary: #262626;
+  --color-secondary-foreground: #ede8df;
   
-  --color-muted: 0 0% 12%;
-  --color-muted-foreground: 0 0% 50%;
+  --color-muted: #1f1f1f;
+  --color-muted-foreground: #808080;
   
-  --color-accent: 38 82% 52%;
-  --color-accent-foreground: 0 0% 4%;
+  --color-accent: #e8a020;
+  --color-accent-foreground: #0a0a0a;
   
-  --color-destructive: 0 84% 60%;
-  --color-destructive-foreground: 0 0% 100%;
+  --color-destructive: #e53e3e;
+  --color-destructive-foreground: #ffffff;
   
-  --color-success: 150 58% 53%;
-  --color-success-foreground: 0 0% 4%;
+  --color-success: #4aaa7a;
+  --color-success-foreground: #0a0a0a;
   
-  --color-warning: 38 100% 50%;
-  --color-warning-foreground: 0 0% 4%;
+  --color-warning: #ff9900;
+  --color-warning-foreground: #0a0a0a;
 }
 
 :root {
-  --background: 0 0% 4%;
-  --foreground: 40 20% 90%;
-  --border: 0 0% 16%;
+  --background: #0a0a0a;
+  --foreground: #ede8df;
+  --border: #292929;
 }
 
 @layer base {
@@ -55,14 +55,14 @@
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
-    background: hsl(0 0% 7%);
+    background: #121212;
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(0 0% 20%);
+    background: #333333;
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(38 82% 52%);
+    background: #e8a020;
   }
   
   input[type="number"]::-webkit-inner-spin-button,
