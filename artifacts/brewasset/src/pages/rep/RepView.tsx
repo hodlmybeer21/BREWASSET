@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { FadeIn, Card, CardHeader, CardContent, Badge, Button, Input, Select, Label, Modal, Textarea } from "@/components/ui/core";
 import { 
   useGetMe, useGetInventory, useGetRequests, useCreateRequest, useCancelRequest,
-  useGetAccountAssets, useGetTransfers, useCreateTransfer, useGetEvents, useCreateEvent,
+  useGetAccountAssets, useGetTransfers, useCreateTransfer, useGetEvents, useCreateEvent, useCancelEvent,
   getGetRequestsQueryKey, getGetAccountAssetsQueryKey, getGetTransfersQueryKey, getGetEventsQueryKey
 } from "@workspace/api-client-react";
 import { ITEM_TYPES, ITEM_ICONS, ITEM_COLORS, CUSTOMERS_BY_REP, BRANDS_BY_ITEM } from "@/lib/constants";
@@ -585,8 +585,13 @@ function EventsTab() {
     }
   });
   
-  const cancelMutation = useCancelRequest({ // Or use cancel event if defined. There's useCancelEvent! Wait, the schema has useCancelEvent
-     // Let's import it properly if needed, but I'll skip cancel for Reps to save time, or just let them view status.
+  const cancelEventMutation = useCancelEvent({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Event cancelled" });
+        queryClient.invalidateQueries({ queryKey: getGetEventsQueryKey() });
+      }
+    }
   });
 
   const [evtForm, setEvtForm] = useState({

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useLogin, useGetMe } from "@workspace/api-client-react";
 import { Card, Button, Input, Select, FadeIn } from "@/components/ui/core";
@@ -12,14 +12,14 @@ export default function Login() {
   const [selectedRep, setSelectedRep] = useState("");
   
   const { data: user, isLoading } = useGetMe();
-  
-  // If already logged in, redirect
-  if (user) {
-    if (user.role === "warehouse") setLocation("/warehouse");
-    else if (user.role === "marketing") setLocation("/marketing");
-    else setLocation("/rep");
-    return null;
-  }
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === "warehouse") setLocation("/warehouse");
+      else if (user.role === "marketing") setLocation("/marketing");
+      else setLocation("/rep");
+    }
+  }, [user, setLocation]);
 
   const loginMutation = useLogin({
     mutation: {
@@ -28,10 +28,10 @@ export default function Login() {
         else if (data.user.role === "marketing") setLocation("/marketing");
         else setLocation("/rep");
       },
-      onError: (err) => {
+      onError: (err: any) => {
         toast({
           title: "Login Failed",
-          description: err.error || "Invalid credentials",
+          description: (err?.data as any)?.error || "Invalid credentials",
           variant: "destructive"
         });
       }

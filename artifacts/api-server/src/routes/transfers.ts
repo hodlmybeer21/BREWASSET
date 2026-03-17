@@ -30,7 +30,7 @@ router.post("/", async (req: Request, res: Response) => {
     const user = users[0];
     if (!user) { res.status(401).json({ error: "Not authenticated" }); return; }
 
-    const isReturn = body.toAccount === "⬡ MAIN WAREHOUSE";
+    const isReturn = body.toAccount === "MAIN WAREHOUSE" || body.toAccount === "⬡ MAIN WAREHOUSE";
 
     if (isReturn) {
       // Return to inventory

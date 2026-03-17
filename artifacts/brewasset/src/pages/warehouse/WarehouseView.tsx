@@ -4,7 +4,7 @@ import { FadeIn, Card, CardHeader, CardContent, Badge, Button, Input, Select, La
 import { 
   useGetInventory, useReceiveStock, useGetReceiveHistory, useGetRequests, useFulfillRequest, useCancelRequest, useGetCatalogItems, useCreateCatalogItem, useDeleteCatalogItem, useAddBrand, useDeleteBrand, getGetInventoryQueryKey, getGetReceiveHistoryQueryKey, getGetRequestsQueryKey, getGetCatalogItemsQueryKey 
 } from "@workspace/api-client-react";
-import { ITEM_TYPES, ITEM_ICONS, ITEM_COLORS } from "@/lib/constants";
+import { ITEM_TYPES, ITEM_ICONS, ITEM_COLORS, BRANDS_BY_ITEM } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Package, History, CheckSquare, PlusSquare, Search, Box } from "lucide-react";

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { FadeIn, Card, CardHeader, CardContent, Badge, Button, Input, Select, Label, Textarea } from "@/components/ui/core";
 import { 
