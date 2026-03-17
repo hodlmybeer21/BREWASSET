@@ -389,6 +389,11 @@ function AccountsTab() {
                         <div className="min-w-0">
                           <div className="font-bold text-sm truncate">{a.brand}</div>
                           <div className="text-[10px] text-muted-foreground uppercase truncate">{a.itemType}</div>
+                          {a.lastDate && (
+                            <div className="text-[9px] text-muted-foreground/60 tracking-wide mt-0.5">
+                              {a.lastDate.split(" ")[0]}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-4 flex-shrink-0">
