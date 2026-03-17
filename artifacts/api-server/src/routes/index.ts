@@ -9,6 +9,7 @@ import staffRouter from "./staff.js";
 import catalogRouter from "./catalog.js";
 import accountsRouter from "./accounts.js";
 import usersRouter from "./users.js";
+import customersRouter from "./customers.js";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use("/staff", staffRouter);
 router.use("/catalog", catalogRouter);
 router.use("/accounts", accountsRouter);
 router.use("/users", usersRouter);
+router.use("/customers", customersRouter);
 
 export default router;

@@ -4,9 +4,10 @@ import { FadeIn, Card, CardHeader, CardContent, Badge, Button, Input, Select, La
 import { 
   useGetMe, useGetInventory, useGetRequests, useCreateRequest, useCancelRequest,
   useGetAccountAssets, useGetTransfers, useCreateTransfer, useGetEvents, useCreateEvent, useCancelEvent,
+  useGetCustomers,
   getGetRequestsQueryKey, getGetAccountAssetsQueryKey, getGetTransfersQueryKey, getGetEventsQueryKey
 } from "@workspace/api-client-react";
-import { ITEM_TYPES, ITEM_ICONS, ITEM_COLORS, CUSTOMERS_BY_REP, BRANDS_BY_ITEM } from "@/lib/constants";
+import { ITEM_TYPES, ITEM_ICONS, ITEM_COLORS, BRANDS_BY_ITEM } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { PackageOpen, ListOrdered, Building2, Repeat, CalendarDays, Search } from "lucide-react";
@@ -65,12 +66,17 @@ function RequestItemsTab() {
   const [customer, setCustomer] = useState("");
   const [search, setSearch] = useState("");
 
+  const { data: customerData } = useGetCustomers(
+    { repUsername: user?.username },
+    { query: { enabled: !!user?.username } }
+  );
+
   const items = inventory || [];
   const availBrands = [...new Set(items.filter(i => i.itemType === itemType).map(i => i.brand))];
   // Fallback to static if empty
   const brandsList = availBrands.length > 0 ? availBrands : (BRANDS_BY_ITEM[itemType] || []);
 
-  const customers = CUSTOMERS_BY_REP[user?.username || ""] || [];
+  const customers = (customerData || []).map(c => c.name);
   const filteredCustomers = customers.filter(c => c.toLowerCase().includes(search.toLowerCase()));
 
   const availQty = items.find(i => i.itemType === itemType && i.brand === brand)?.quantity || 0;
@@ -275,14 +281,18 @@ function MyRequestsTab() {
 function AccountsTab() {
   const { data: user } = useGetMe();
   const { data: assets } = useGetAccountAssets({ repUsername: user?.username || "" });
+  const { data: customers } = useGetCustomers(
+    { repUsername: user?.username },
+    { query: { enabled: !!user?.username } }
+  );
   const [filterType, setFilterType] = useState("All");
   const [search, setSearch] = useState("");
   const [transferModal, setTransferModal] = useState<{fromAccount: string, itemType: string, brand: string, maxQty: number} | null>(null);
 
-  // Group assets by account, then merge in all assigned accounts (even with no items)
+  // Group assets by account, then merge in all assigned accounts from DB (even with no items)
   const accountsMap: Record<string, typeof assets> = {};
-  // Seed all assigned accounts from master list first (empty arrays)
-  const assignedAccounts = CUSTOMERS_BY_REP[user?.username || ""] || [];
+  // Seed all assigned accounts from DB customers table first (empty arrays)
+  const assignedAccounts = (customers || []).map(c => c.name);
   assignedAccounts.forEach(acct => { accountsMap[acct] = []; });
   // Overlay actual asset data
   if (assets) {
@@ -426,6 +436,10 @@ function TransferModal({ isOpen, onClose, data }: { isOpen: boolean, onClose: ()
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: user } = useGetMe();
+  const { data: customerData } = useGetCustomers(
+    { repUsername: user?.username },
+    { query: { enabled: !!user?.username } }
+  );
 
   const transferMutation = useCreateTransfer({
     mutation: {
@@ -438,7 +452,7 @@ function TransferModal({ isOpen, onClose, data }: { isOpen: boolean, onClose: ()
     }
   });
 
-  const customers = CUSTOMERS_BY_REP[user?.username || ""] || [];
+  const customers = (customerData || []).map(c => c.name);
   const filteredOptions = customers.filter(c => c !== data.fromAccount && (!toSearch || c.toLowerCase().includes(toSearch.toLowerCase()))).slice(0, 10);
   const showWarehouseOption = !toSearch || "main warehouse".includes(toSearch.toLowerCase());
 
@@ -617,7 +631,11 @@ function EventsTab() {
   });
   const [searchAccount, setSearchAccount] = useState("");
 
-  const customers = CUSTOMERS_BY_REP[user?.username || ""] || [];
+  const { data: customerData } = useGetCustomers(
+    { repUsername: user?.username },
+    { query: { enabled: !!user?.username } }
+  );
+  const customers = (customerData || []).map(c => c.name);
   const allBrands = Object.values(BRANDS_BY_ITEM).flat();
 
   const handleSubmit = () => {

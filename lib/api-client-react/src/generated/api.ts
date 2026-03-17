@@ -25,9 +25,11 @@ import type {
   CreatePromoStaffBody,
   CreateRequestBody,
   CreateTransferBody,
+  CustomerRecord,
   ErrorResponse,
   Event,
   GetAccountAssetsParams,
+  GetCustomersParams,
   GetEventsParams,
   GetRequestsParams,
   GetTransfersParams,
@@ -2543,6 +2545,87 @@ export function useGetUsers<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetUsersQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+// ─── Customers ────────────────────────────────────────────────────────────────
+
+export const getGetCustomersUrl = (params?: GetCustomersParams) => {
+  const normalizedParams = new URLSearchParams();
+  if (params?.repUsername !== undefined) {
+    normalizedParams.append("repUsername", params.repUsername);
+  }
+  const stringifiedParams = normalizedParams.toString();
+  return stringifiedParams.length > 0
+    ? `/api/customers?${stringifiedParams}`
+    : `/api/customers`;
+};
+
+export const getCustomers = async (
+  params?: GetCustomersParams,
+  options?: RequestInit,
+): Promise<CustomerRecord[]> => {
+  return customFetch<CustomerRecord[]>(getGetCustomersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCustomersQueryKey = (params?: GetCustomersParams) => {
+  return [`/api/customers`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetCustomersQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCustomers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetCustomersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCustomers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetCustomersQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCustomers>>> = ({
+    signal,
+  }) => getCustomers(params, { signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCustomers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCustomersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCustomers>>
+>;
+export type GetCustomersQueryError = ErrorType<unknown>;
+
+export function useGetCustomers<
+  TData = Awaited<ReturnType<typeof getCustomers>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetCustomersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCustomers>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCustomersQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

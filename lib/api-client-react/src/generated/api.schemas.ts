@@ -223,3 +223,16 @@ export type GetTransfersParams = {
 export type GetAccountAssetsParams = {
   repUsername: string;
 };
+
+export interface CustomerRecord {
+  id: number;
+  name: string;
+  repUsername: string;
+  chain?: string | null;
+  customerType?: string | null;
+  active: boolean;
+}
+
+export type GetCustomersParams = {
+  repUsername?: string;
+};
