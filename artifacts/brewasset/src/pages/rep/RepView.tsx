@@ -70,7 +70,7 @@ function RequestItemsTab() {
   // Fallback to static if empty
   const brandsList = availBrands.length > 0 ? availBrands : (BRANDS_BY_ITEM[itemType] || []);
 
-  const customers = CUSTOMERS_BY_REP[user?.username || ""] || CUSTOMERS_BY_REP["Sarah J."]; // fallback for demo
+  const customers = CUSTOMERS_BY_REP[user?.username || ""] || [];
   const filteredCustomers = customers.filter(c => c.toLowerCase().includes(search.toLowerCase()));
 
   const availQty = items.find(i => i.itemType === itemType && i.brand === brand)?.quantity || 0;
@@ -420,7 +420,7 @@ function TransferModal({ isOpen, onClose, data }: { isOpen: boolean, onClose: ()
     }
   });
 
-  const customers = CUSTOMERS_BY_REP[user?.username || ""] || CUSTOMERS_BY_REP["Sarah J."];
+  const customers = CUSTOMERS_BY_REP[user?.username || ""] || [];
   const filteredOptions = customers.filter(c => c !== data.fromAccount && (!toSearch || c.toLowerCase().includes(toSearch.toLowerCase()))).slice(0, 10);
   const showWarehouseOption = !toSearch || "main warehouse".includes(toSearch.toLowerCase());
 
@@ -599,7 +599,7 @@ function EventsTab() {
   });
   const [searchAccount, setSearchAccount] = useState("");
 
-  const customers = CUSTOMERS_BY_REP[user?.username || ""] || CUSTOMERS_BY_REP["Sarah J."];
+  const customers = CUSTOMERS_BY_REP[user?.username || ""] || [];
   const allBrands = Object.values(BRANDS_BY_ITEM).flat();
 
   const handleSubmit = () => {
