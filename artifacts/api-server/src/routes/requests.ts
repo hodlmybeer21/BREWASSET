@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
-import { posRequestsTable, inventoryTable } from "@workspace/db/schema";
+import { posRequestsTable, inventoryTable, accountAssetsTable } from "@workspace/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
 
@@ -78,9 +78,40 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.post("/:id/fulfill", async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  const reqs = await db.select().from(posRequestsTable).where(eq(posRequestsTable.id, id));
+  const request = reqs[0];
+
   await db.update(posRequestsTable)
-    .set({ status: "Fulfilled", fulfilledAt: new Date() })
+    .set({ status: "Fulfilled", fulfilledAt: now })
     .where(eq(posRequestsTable.id, id));
+
+  if (request) {
+    const existing = await db.select().from(accountAssetsTable)
+      .where(and(
+        eq(accountAssetsTable.repUsername, request.repUsername),
+        eq(accountAssetsTable.account, request.customer),
+        eq(accountAssetsTable.itemType, request.itemType),
+        eq(accountAssetsTable.brand, request.brand)
+      ));
+    if (existing[0]) {
+      await db.update(accountAssetsTable)
+        .set({ count: existing[0].count + request.quantity, lastDate: dateStr, updatedAt: now })
+        .where(eq(accountAssetsTable.id, existing[0].id));
+    } else {
+      await db.insert(accountAssetsTable).values({
+        repUsername: request.repUsername,
+        account: request.customer,
+        itemType: request.itemType,
+        brand: request.brand,
+        count: request.quantity,
+        lastDate: dateStr,
+      });
+    }
+  }
+
   res.json({ success: true, message: "Request fulfilled" });
 });
 

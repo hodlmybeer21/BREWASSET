@@ -61,6 +61,8 @@ router.post("/", async (req: Request, res: Response) => {
 
     // Update account assets
     async function adjustAsset(account: string, delta: number) {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
       const existing = await db.select().from(accountAssetsTable)
         .where(and(
           eq(accountAssetsTable.repUsername, user.username),
@@ -70,8 +72,10 @@ router.post("/", async (req: Request, res: Response) => {
         ));
       if (existing[0]) {
         const newCount = Math.max(0, existing[0].count + delta);
+        const updateFields: any = { count: newCount, updatedAt: now };
+        if (delta > 0) updateFields.lastDate = dateStr;
         await db.update(accountAssetsTable)
-          .set({ count: newCount })
+          .set(updateFields)
           .where(eq(accountAssetsTable.id, existing[0].id));
       } else if (delta > 0) {
         await db.insert(accountAssetsTable).values({
@@ -80,6 +84,7 @@ router.post("/", async (req: Request, res: Response) => {
           itemType: body.itemType,
           brand: body.brand,
           count: delta,
+          lastDate: dateStr,
         });
       }
     }
