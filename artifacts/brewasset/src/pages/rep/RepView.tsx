@@ -288,6 +288,16 @@ function AccountsTab() {
   const [filterType, setFilterType] = useState("All");
   const [search, setSearch] = useState("");
   const [transferModal, setTransferModal] = useState<{fromAccount: string, itemType: string, brand: string, maxQty: number} | null>(null);
+  const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set());
+  const ITEMS_PREVIEW = 4;
+
+  const toggleExpand = (account: string) => {
+    setExpandedAccounts(prev => {
+      const next = new Set(prev);
+      next.has(account) ? next.delete(account) : next.add(account);
+      return next;
+    });
+  };
 
   // Group assets by account, then merge in all assigned accounts from DB (even with no items)
   const accountsMap: Record<string, typeof assets> = {};
@@ -360,6 +370,9 @@ function AccountsTab() {
 
           const totalItems = filtered.reduce((s, a) => s + a.count, 0);
           const isEmpty = allAssets.length === 0;
+          const isExpanded = expandedAccounts.has(account);
+          const hasMore = filtered.length > ITEMS_PREVIEW;
+          const visibleItems = isExpanded ? filtered : filtered.slice(0, ITEMS_PREVIEW);
 
           return (
             <Card key={account} className={`flex flex-col ${isEmpty ? "opacity-50" : ""}`}>
@@ -382,7 +395,7 @@ function AccountsTab() {
               </CardHeader>
               {!isEmpty && (
                 <div className="flex-1 divide-y divide-border">
-                  {filtered.map((a, i) => (
+                  {visibleItems.map((a, i) => (
                     <div key={i} className="p-3 px-4 flex justify-between items-center hover:bg-surface2/50 transition-colors">
                       <div className="flex items-center gap-3 overflow-hidden">
                         <span className="text-xl flex-shrink-0">{ITEM_ICONS[a.itemType] || "📦"}</span>
@@ -411,6 +424,18 @@ function AccountsTab() {
                       </div>
                     </div>
                   ))}
+                  {hasMore && (
+                    <button
+                      onClick={() => toggleExpand(account)}
+                      className="w-full py-2.5 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-primary hover:bg-surface2/50 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      {isExpanded ? (
+                        <><span>▲</span> Show less</>
+                      ) : (
+                        <><span>▼</span> Show {filtered.length - ITEMS_PREVIEW} more</>
+                      )}
+                    </button>
+                  )}
                 </div>
               )}
             </Card>
