@@ -12,7 +12,8 @@
     "sync-accounts-master": "tsx ./src/sync-accounts-master.ts",
     "seed-customers": "tsx ./src/seed-customers.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "set-individual-passwords": "tsx ./src/set-individual-passwords.ts"
+    "set-individual-passwords": "tsx ./src/set-individual-passwords.ts",
+    "fix-last-dates": "tsx ./src/fix-last-dates.ts"
   },
   "dependencies": {
     "@workspace/db": "workspace:*",
