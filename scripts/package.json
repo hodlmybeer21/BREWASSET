@@ -9,10 +9,12 @@
     "seed-accounts": "tsx ./src/seed-accounts.ts",
     "seed-catalog-brands": "tsx ./src/seed-catalog-brands.ts",
     "seed-master-reps": "tsx ./src/seed-master-reps.ts",
+    "sync-accounts-master": "tsx ./src/sync-accounts-master.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@workspace/db": "workspace:*"
+    "@workspace/db": "workspace:*",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "catalog:",
