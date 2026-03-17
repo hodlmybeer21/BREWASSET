@@ -279,18 +279,28 @@ function AccountsTab() {
   const [search, setSearch] = useState("");
   const [transferModal, setTransferModal] = useState<{fromAccount: string, itemType: string, brand: string, maxQty: number} | null>(null);
 
-  // Group assets by account
+  // Group assets by account, then merge in all assigned accounts (even with no items)
   const accountsMap: Record<string, typeof assets> = {};
+  // Seed all assigned accounts from master list first (empty arrays)
+  const assignedAccounts = CUSTOMERS_BY_REP[user?.username || ""] || [];
+  assignedAccounts.forEach(acct => { accountsMap[acct] = []; });
+  // Overlay actual asset data
   if (assets) {
     assets.forEach(a => {
       if (!accountsMap[a.account]) accountsMap[a.account] = [];
-      accountsMap[a.account].push(a);
+      accountsMap[a.account]!.push(a);
     });
   }
 
   const sortedAccounts = Object.entries(accountsMap)
     .filter(([name]) => !search || name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => b[1]!.length - a[1]!.length);
+    // Sort: accounts with items first (by item count desc), then empty accounts alphabetically
+    .sort((a, b) => {
+      const aLen = a[1]?.length || 0;
+      const bLen = b[1]?.length || 0;
+      if (aLen !== bLen) return bLen - aLen;
+      return a[0].localeCompare(b[0]);
+    });
 
   return (
     <FadeIn>
@@ -333,53 +343,61 @@ function AccountsTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {sortedAccounts.map(([account, accAssets]) => {
-          const filtered = filterType === "All" ? accAssets : accAssets!.filter(a => a.itemType === filterType);
-          if (!filtered || filtered.length === 0) return null;
+          const allAssets = accAssets || [];
+          const filtered = filterType === "All" ? allAssets : allAssets.filter(a => a.itemType === filterType);
+          // When filtering by type, skip accounts that don't have that item type
+          if (filterType !== "All" && filtered.length === 0) return null;
 
           const totalItems = filtered.reduce((s, a) => s + a.count, 0);
+          const isEmpty = allAssets.length === 0;
 
           return (
-            <Card key={account} className="flex flex-col">
+            <Card key={account} className={`flex flex-col ${isEmpty ? "opacity-50" : ""}`}>
               <CardHeader className="flex flex-row justify-between items-start">
                 <div>
                   <h3 className="font-bold text-lg leading-tight mb-2 text-primary">{account}</h3>
                   <div className="flex flex-wrap gap-1">
-                    {[...new Set(filtered.map(a => a.itemType))].map(t => (
-                      <Badge key={t} variant="tint" color={ITEM_COLORS[t] || "#888"} className="text-[8px] px-1 py-0">{ITEM_ICONS[t]}</Badge>
-                    ))}
+                    {isEmpty
+                      ? <span className="text-[9px] text-muted-foreground tracking-widest uppercase">No items on file</span>
+                      : [...new Set(filtered.map(a => a.itemType))].map(t => (
+                          <Badge key={t} variant="tint" color={ITEM_COLORS[t] || "#888"} className="text-[8px] px-1 py-0">{ITEM_ICONS[t]}</Badge>
+                        ))
+                    }
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-foreground leading-none">{totalItems}</div>
+                  <div className="text-2xl font-bold text-foreground leading-none">{isEmpty ? "—" : totalItems}</div>
                   <div className="text-[9px] text-muted-foreground tracking-widest uppercase">Items</div>
                 </div>
               </CardHeader>
-              <div className="flex-1 divide-y divide-border">
-                {filtered.map((a, i) => (
-                  <div key={i} className="p-3 px-4 flex justify-between items-center hover:bg-surface2/50 transition-colors">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <span className="text-xl flex-shrink-0">{ITEM_ICONS[a.itemType] || "📦"}</span>
-                      <div className="min-w-0">
-                        <div className="font-bold text-sm truncate">{a.brand}</div>
-                        <div className="text-[10px] text-muted-foreground uppercase truncate">{a.itemType}</div>
+              {!isEmpty && (
+                <div className="flex-1 divide-y divide-border">
+                  {filtered.map((a, i) => (
+                    <div key={i} className="p-3 px-4 flex justify-between items-center hover:bg-surface2/50 transition-colors">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <span className="text-xl flex-shrink-0">{ITEM_ICONS[a.itemType] || "📦"}</span>
+                        <div className="min-w-0">
+                          <div className="font-bold text-sm truncate">{a.brand}</div>
+                          <div className="text-[10px] text-muted-foreground uppercase truncate">{a.itemType}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        <div className="text-right">
+                          <div className="font-bold text-lg" style={{ color: ITEM_COLORS[a.itemType] || '#888' }}>{a.count}</div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-[10px] px-2 text-[#60a0e8] border-[#60a0e8]/30 hover:bg-[#60a0e8]/10 hover:border-[#60a0e8]"
+                          onClick={() => setTransferModal({ fromAccount: account, itemType: a.itemType, brand: a.brand, maxQty: a.count })}
+                        >
+                          ⇄ Move
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 flex-shrink-0">
-                      <div className="text-right">
-                        <div className="font-bold text-lg" style={{ color: ITEM_COLORS[a.itemType] || '#888' }}>{a.count}</div>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-7 text-[10px] px-2 text-[#60a0e8] border-[#60a0e8]/30 hover:bg-[#60a0e8]/10 hover:border-[#60a0e8]"
-                        onClick={() => setTransferModal({ fromAccount: account, itemType: a.itemType, brand: a.brand, maxQty: a.count })}
-                      >
-                        ⇄ Move
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </Card>
           );
         })}

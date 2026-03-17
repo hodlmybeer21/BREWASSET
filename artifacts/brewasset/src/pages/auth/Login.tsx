@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useLogin, useGetMe } from "@workspace/api-client-react";
 import { Card, Button, Input, Select, FadeIn } from "@/components/ui/core";
 import { Hexagon, Warehouse, Users, CalendarDays, Loader2 } from "lucide-react";
-import { ALL_REPS } from "@/lib/constants";
+import { ALL_REPS, REP_DISPLAY_NAMES } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
@@ -100,9 +100,11 @@ export default function Login() {
                 className="h-12 bg-background/50"
               >
                 <option value="">Select your name...</option>
-                {ALL_REPS.map(rep => (
-                  <option key={rep} value={rep}>{rep}</option>
-                ))}
+                {[...ALL_REPS]
+                  .sort((a, b) => (REP_DISPLAY_NAMES[a] || a).localeCompare(REP_DISPLAY_NAMES[b] || b))
+                  .map(rep => (
+                    <option key={rep} value={rep}>{REP_DISPLAY_NAMES[rep] || rep}</option>
+                  ))}
               </Select>
               <Button 
                 variant="outline"
@@ -113,12 +115,6 @@ export default function Login() {
                 <Users className="w-4 h-4 mr-3 opacity-70" />
                 Rep Login
               </Button>
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
             </div>
 
             <Button 
