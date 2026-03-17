@@ -88,13 +88,9 @@ export default function Login() {
               Warehouse Staff Login
             </Button>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-[10px] uppercase tracking-widest">
-                <span className="bg-surface px-2 text-muted-foreground">Or log in as rep</span>
-              </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Or log in as rep</span>
+              <span className="w-full border-t border-border" />
             </div>
 
             <div className="space-y-3">
