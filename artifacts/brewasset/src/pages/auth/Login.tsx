@@ -2,15 +2,20 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useLogin, useGetMe } from "@workspace/api-client-react";
 import { Card, Button, Input, Select, FadeIn } from "@/components/ui/core";
-import { Hexagon, Warehouse, Users, CalendarDays, Loader2 } from "lucide-react";
+import { Hexagon, Warehouse, Users, CalendarDays, Loader2, Eye, EyeOff, X } from "lucide-react";
 import { ALL_REPS, REP_DISPLAY_NAMES } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
+
+type ActivePanel = "rep" | "warehouse" | "marketing" | null;
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedRep, setSelectedRep] = useState("");
-  
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [activePanel, setActivePanel] = useState<ActivePanel>(null);
+
   const { data: user, isLoading } = useGetMe();
 
   useEffect(() => {
@@ -28,21 +33,32 @@ export default function Login() {
         else if (data.user.role === "marketing") setLocation("/marketing");
         else setLocation("/rep");
       },
-      onError: (err: any) => {
+      onError: () => {
         toast({
           title: "Login Failed",
-          description: (err?.data as any)?.error || "Invalid credentials",
+          description: "Incorrect password. Please try again.",
           variant: "destructive"
         });
+        setPassword("");
       }
     }
   });
 
-  const handleLogin = (role: string, username: string) => {
-    let password = "brewasset2026";
-    if (role === "warehouse") password = "warehouse123";
-    if (role === "marketing") password = "marketing123";
+  const handleSubmit = (username: string) => {
+    if (!password) return;
     loginMutation.mutate({ data: { username, password } });
+  };
+
+  const openPanel = (panel: ActivePanel) => {
+    setActivePanel(panel);
+    setPassword("");
+    setShowPassword(false);
+  };
+
+  const closePanel = () => {
+    setActivePanel(null);
+    setPassword("");
+    setShowPassword(false);
   };
 
   if (isLoading) {
@@ -53,17 +69,35 @@ export default function Login() {
     );
   }
 
+  const PasswordField = ({ onSubmit }: { onSubmit: () => void }) => (
+    <div className="relative">
+      <Input
+        type={showPassword ? "text" : "password"}
+        placeholder="Enter your password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && password && onSubmit()}
+        className="h-12 pr-10 bg-background/50"
+        autoFocus
+      />
+      <button
+        type="button"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        onClick={() => setShowPassword(v => !v)}
+      >
+        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
-      {/* Background Image with Dark Wash */}
       <div className="absolute inset-0 z-0">
-        {/* landing page hero scenic industrial brewery warehouse */}
-        <img 
+        <img
           src={`${import.meta.env.BASE_URL}images/login-bg.png`}
           alt="Brewery Warehouse"
           className="w-full h-full object-cover opacity-30"
           onError={(e) => {
-            // Fallback to Unsplash if AI image fails to load
             e.currentTarget.src = "https://images.unsplash.com/photo-1588685121404-325b9e0787e9?q=80&w=2000&auto=format&fit=crop";
           }}
         />
@@ -78,25 +112,54 @@ export default function Login() {
         </div>
 
         <Card className="p-8 backdrop-blur-md bg-surface/80 border-primary/20 shadow-2xl">
-          <div className="space-y-6">
-            <Button 
-              className="w-full h-14 text-sm" 
-              onClick={() => handleLogin("warehouse", "warehouse")}
-              disabled={loginMutation.isPending}
-            >
-              <Warehouse className="w-5 h-5 mr-3 opacity-70" />
-              Warehouse Staff Login
-            </Button>
+          <div className="space-y-5">
+
+            {/* Warehouse */}
+            {activePanel === "warehouse" ? (
+              <div className="space-y-3 p-4 rounded-lg border border-primary/30 bg-primary/5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Warehouse className="w-4 h-4" />
+                    <span className="text-xs font-bold tracking-widest uppercase">Warehouse Staff</span>
+                  </div>
+                  <button onClick={closePanel} className="text-muted-foreground hover:text-foreground">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <PasswordField onSubmit={() => handleSubmit("warehouse")} />
+                <Button
+                  className="w-full h-11 text-sm"
+                  onClick={() => handleSubmit("warehouse")}
+                  disabled={!password || loginMutation.isPending}
+                >
+                  {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                className="w-full h-14 text-sm"
+                onClick={() => openPanel("warehouse")}
+                disabled={loginMutation.isPending}
+              >
+                <Warehouse className="w-5 h-5 mr-3 opacity-70" />
+                Warehouse Staff Login
+              </Button>
+            )}
 
             <div className="flex flex-col items-center gap-1">
               <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Or log in as rep</span>
               <span className="w-full border-t border-border" />
             </div>
 
+            {/* Rep */}
             <div className="space-y-3">
-              <Select 
-                value={selectedRep} 
-                onChange={(e) => setSelectedRep(e.target.value)}
+              <Select
+                value={selectedRep}
+                onChange={(e) => {
+                  setSelectedRep(e.target.value);
+                  setPassword("");
+                  setActivePanel(e.target.value ? "rep" : null);
+                }}
                 className="h-12 bg-background/50"
               >
                 <option value="">Select your name...</option>
@@ -106,26 +169,56 @@ export default function Login() {
                     <option key={rep} value={rep}>{REP_DISPLAY_NAMES[rep] || rep}</option>
                   ))}
               </Select>
-              <Button 
+              {selectedRep && (
+                <PasswordField onSubmit={() => handleSubmit(selectedRep)} />
+              )}
+              <Button
                 variant="outline"
-                className="w-full h-12" 
-                disabled={!selectedRep || loginMutation.isPending}
-                onClick={() => handleLogin("rep", selectedRep)}
+                className="w-full h-12"
+                disabled={!selectedRep || !password || loginMutation.isPending}
+                onClick={() => handleSubmit(selectedRep)}
               >
-                <Users className="w-4 h-4 mr-3 opacity-70" />
+                {loginMutation.isPending && activePanel === "rep"
+                  ? <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  : <Users className="w-4 h-4 mr-3 opacity-70" />}
                 Rep Login
               </Button>
             </div>
 
-            <Button 
-              variant="secondary"
-              className="w-full h-12 text-[#60a0e8] border-[#60a0e8]/20 bg-[#60a0e8]/5 hover:bg-[#60a0e8]/10" 
-              onClick={() => handleLogin("marketing", "marketing")}
-              disabled={loginMutation.isPending}
-            >
-              <CalendarDays className="w-4 h-4 mr-3 opacity-70" />
-              Marketing Manager
-            </Button>
+            {/* Marketing */}
+            {activePanel === "marketing" ? (
+              <div className="space-y-3 p-4 rounded-lg border border-[#60a0e8]/30 bg-[#60a0e8]/5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 text-[#60a0e8]">
+                    <CalendarDays className="w-4 h-4" />
+                    <span className="text-xs font-bold tracking-widest uppercase">Marketing Manager</span>
+                  </div>
+                  <button onClick={closePanel} className="text-muted-foreground hover:text-foreground">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <PasswordField onSubmit={() => handleSubmit("marketing")} />
+                <Button
+                  variant="secondary"
+                  className="w-full h-11 text-[#60a0e8] border-[#60a0e8]/20 bg-[#60a0e8]/5 hover:bg-[#60a0e8]/10"
+                  onClick={() => handleSubmit("marketing")}
+                  disabled={!password || loginMutation.isPending}
+                >
+                  {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="secondary"
+                className="w-full h-12 text-[#60a0e8] border-[#60a0e8]/20 bg-[#60a0e8]/5 hover:bg-[#60a0e8]/10"
+                onClick={() => openPanel("marketing")}
+                disabled={loginMutation.isPending}
+              >
+                <CalendarDays className="w-4 h-4 mr-3 opacity-70" />
+                Marketing Manager
+              </Button>
+            )}
+
           </div>
         </Card>
       </FadeIn>
