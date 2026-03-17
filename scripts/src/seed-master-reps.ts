@@ -14,7 +14,6 @@ function hashPassword(password: string): string {
 }
 
 const MASTER_REPS: Array<{ username: string; displayName: string }> = [
-  { username: "aherbert",   displayName: "Alisha Herbert" },
   { username: "amartin",    displayName: "Alex Martin" },
   { username: "bgermano",   displayName: "Ben Germano" },
   { username: "ddooling",   displayName: "Dustin Dooling" },
@@ -22,7 +21,6 @@ const MASTER_REPS: Array<{ username: string; displayName: string }> = [
   { username: "eplatt",     displayName: "Ethan Platt" },
   { username: "ggage",      displayName: "Gary Gage" },
   { username: "jaustin",    displayName: "Jeff Austin" },
-  { username: "jbellavance",displayName: "Joe Bellavance IV" },
   { username: "jcannamucio",displayName: "Jason Cannamucio" },
   { username: "jcaron",     displayName: "Joe Caron" },
   { username: "jgiuffrida", displayName: "Joe Giuffrida" },
@@ -37,7 +35,6 @@ const MASTER_REPS: Array<{ username: string; displayName: string }> = [
   { username: "lnorton",    displayName: "Luke Norton" },
   { username: "lortiz",     displayName: "Luis Ortiz" },
   { username: "maanderson", displayName: "Mark Anderson" },
-  { username: "nchauvette", displayName: "Nichole Chauvette" },
   { username: "nmoore",     displayName: "Nathan Moore" },
   { username: "pbelanger",  displayName: "Paul Belanger" },
   { username: "pwollert",   displayName: "Paul Wollert" },
@@ -92,9 +89,8 @@ async function main() {
   }
 
   // Add accounts for new reps that have no account_assets yet
-  // (aherbert, jbellavance, jmalloy, jsmoyer, jsweeney, nchauvette, nmoore, rmarique)
   const newReps = MASTER_REPS.filter(r =>
-    ["aherbert","jbellavance","jmalloy","jsmoyer","jsweeney","nchauvette","nmoore","rmarique"].includes(r.username)
+    ["jmalloy","jsmoyer","jsweeney","nmoore","rmarique"].includes(r.username)
   );
 
   for (const rep of newReps) {

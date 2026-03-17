@@ -8,10 +8,9 @@ const XLSX = await import("xlsx");
 
 const XLSX_PATH = "/home/runner/workspace/attached_assets/Customers_TDUBUQUE_20260317_0848490331926_1773758938130.xlsx";
 
-// Rep full name → username mapping (32 reps)
+// Rep full name → username mapping (29 reps)
 const FULL_NAME_TO_USERNAME: Record<string, string> = {
   "Alex Martin": "amartin",
-  "Alisha Herbert": "aherbert",
   "Ben Germano": "bgermano",
   "Dustin Dooling": "ddooling",
   "Ethan Leahy": "eleahy",
@@ -23,7 +22,6 @@ const FULL_NAME_TO_USERNAME: Record<string, string> = {
   "Jerry Smoyer": "jsmoyer",
   "Jesse Johnson": "jjohnson",
   "Jim Morse": "jmorse",
-  "Joe Bellavance IV": "jbellavance",
   "Joe Caron": "jcaron",
   "Joe Giuffrida": "jgiuffrida",
   "John Sweeney": "jsweeney",
@@ -34,7 +32,6 @@ const FULL_NAME_TO_USERNAME: Record<string, string> = {
   "Luke Norton": "lnorton",
   "Mark Anderson": "maanderson",
   "Nathan Moore": "nmoore",
-  "Nichole Chauvette": "nchauvette",
   "Paul Belanger": "pbelanger",
   "Paul Wollert": "pwollert",
   "Richard Marique": "rmarique",
