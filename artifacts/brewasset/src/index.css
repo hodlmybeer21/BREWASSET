@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: 'DM Mono', monospace;
+  --font-mono: 'DM Mono', monospace;
+
+  --color-background: 0 0% 4%;
+  --color-foreground: 40 20% 90%;
+  
+  --color-surface: 0 0% 8%;
+  --color-surface2: 0 0% 12%;
+  
+  --color-border: 0 0% 16%;
+  --color-border2: 0 0% 20%;
+  
+  --color-primary: 38 82% 52%;
+  --color-primary-foreground: 0 0% 4%;
+  
+  --color-secondary: 0 0% 15%;
+  --color-secondary-foreground: 40 20% 90%;
+  
+  --color-muted: 0 0% 12%;
+  --color-muted-foreground: 0 0% 50%;
+  
+  --color-accent: 38 82% 52%;
+  --color-accent-foreground: 0 0% 4%;
+  
+  --color-destructive: 0 84% 60%;
+  --color-destructive-foreground: 0 0% 100%;
+  
+  --color-success: 150 58% 53%;
+  --color-success-foreground: 0 0% 4%;
+  
+  --color-warning: 38 100% 50%;
+  --color-warning-foreground: 0 0% 4%;
+}
+
+:root {
+  --background: 0 0% 4%;
+  --foreground: 40 20% 90%;
+  --border: 0 0% 16%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-mono antialiased bg-background text-foreground overflow-x-hidden;
+  }
+  
+  /* Custom Scrollbar for industrial feel */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: hsl(0 0% 7%);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(0 0% 20%);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(38 82% 52%);
+  }
+  
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer utilities {
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  }
+}

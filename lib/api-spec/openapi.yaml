@@ -1,22 +1,37 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: BrewAsset POS & WMS API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: inventory
+    description: Inventory management
+  - name: requests
+    description: POS requests
+  - name: events
+    description: Events & promos
+  - name: transfers
+    description: Item transfers
+  - name: staff
+    description: Promo staff
+  - name: catalog
+    description: Item types and brands
+  - name: accounts
+    description: Account assets
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +39,543 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /inventory:
+    get:
+      operationId: getInventory
+      tags: [inventory]
+      summary: Get all inventory
+      responses:
+        "200":
+          description: Inventory list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryItem"
+
+  /inventory/receive:
+    post:
+      operationId: receiveStock
+      tags: [inventory]
+      summary: Receive stock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReceiveStockRequest"
+      responses:
+        "200":
+          description: Stock received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /inventory/history:
+    get:
+      operationId: getReceiveHistory
+      tags: [inventory]
+      summary: Get receive history
+      responses:
+        "200":
+          description: History list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReceiveHistoryItem"
+
+  /requests:
+    get:
+      operationId: getRequests
+      tags: [requests]
+      summary: Get all requests
+      parameters:
+        - name: repUsername
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Request list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PosRequest"
+    post:
+      operationId: createRequest
+      tags: [requests]
+      summary: Submit a POS request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRequestBody"
+      responses:
+        "200":
+          description: Request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PosRequest"
+
+  /requests/{id}/fulfill:
+    post:
+      operationId: fulfillRequest
+      tags: [requests]
+      summary: Mark request as fulfilled
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Request fulfilled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /requests/{id}/cancel:
+    post:
+      operationId: cancelRequest
+      tags: [requests]
+      summary: Cancel a request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Request cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /events:
+    get:
+      operationId: getEvents
+      tags: [events]
+      summary: Get all events
+      parameters:
+        - name: repUsername
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Events list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Create an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEventBody"
+      responses:
+        "200":
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+
+  /events/{id}/approve:
+    post:
+      operationId: approveEvent
+      tags: [events]
+      summary: Approve an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Event approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /events/{id}/cancel:
+    post:
+      operationId: cancelEvent
+      tags: [events]
+      summary: Cancel an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Event cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /events/{id}/staff:
+    post:
+      operationId: toggleEventStaff
+      tags: [events]
+      summary: Assign or remove staff from event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToggleStaffBody"
+      responses:
+        "200":
+          description: Staff updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /events/{id}/approve-pos:
+    post:
+      operationId: approvePOS
+      tags: [events]
+      summary: Approve POS materials for event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: POS approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /transfers:
+    get:
+      operationId: getTransfers
+      tags: [transfers]
+      summary: Get transfers
+      parameters:
+        - name: repUsername
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Transfer list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transfer"
+    post:
+      operationId: createTransfer
+      tags: [transfers]
+      summary: Create a transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransferBody"
+      responses:
+        "200":
+          description: Transfer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transfer"
+
+  /staff:
+    get:
+      operationId: getPromoStaff
+      tags: [staff]
+      summary: Get promo staff
+      responses:
+        "200":
+          description: Staff list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PromoStaff"
+    post:
+      operationId: createPromoStaff
+      tags: [staff]
+      summary: Add promo staff
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromoStaffBody"
+      responses:
+        "200":
+          description: Staff created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromoStaff"
+
+  /staff/{id}:
+    put:
+      operationId: updatePromoStaff
+      tags: [staff]
+      summary: Update promo staff
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromoStaffBody"
+      responses:
+        "200":
+          description: Staff updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromoStaff"
+    delete:
+      operationId: deletePromoStaff
+      tags: [staff]
+      summary: Remove promo staff
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Staff removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /catalog/items:
+    get:
+      operationId: getCatalogItems
+      tags: [catalog]
+      summary: Get item types
+      responses:
+        "200":
+          description: Item types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CatalogItem"
+    post:
+      operationId: createCatalogItem
+      tags: [catalog]
+      summary: Add item type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCatalogItemBody"
+      responses:
+        "200":
+          description: Item type created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogItem"
+
+  /catalog/items/{id}:
+    delete:
+      operationId: deleteCatalogItem
+      tags: [catalog]
+      summary: Remove item type
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Item type removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /catalog/brands:
+    post:
+      operationId: addBrand
+      tags: [catalog]
+      summary: Add brand to item type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddBrandBody"
+      responses:
+        "200":
+          description: Brand added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /catalog/brands/{id}:
+    delete:
+      operationId: deleteBrand
+      tags: [catalog]
+      summary: Remove brand
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Brand removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /accounts:
+    get:
+      operationId: getAccountAssets
+      tags: [accounts]
+      summary: Get account assets for a rep
+      parameters:
+        - name: repUsername
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Account assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountAsset"
+
+  /users:
+    get:
+      operationId: getUsers
+      tags: [auth]
+      summary: Get all users (marketing manager only)
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +583,359 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+      required: [user]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        role:
+          type: string
+          enum: [rep, warehouse, marketing]
+        displayName:
+          type: string
+      required: [id, username, role, displayName]
+
+    InventoryItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        itemType:
+          type: string
+        brand:
+          type: string
+        quantity:
+          type: integer
+        catalogItemId:
+          type: integer
+        brandId:
+          type: integer
+      required: [id, itemType, brand, quantity, catalogItemId, brandId]
+
+    ReceiveStockRequest:
+      type: object
+      properties:
+        itemType:
+          type: string
+        brand:
+          type: string
+        quantity:
+          type: integer
+      required: [itemType, brand, quantity]
+
+    ReceiveHistoryItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        itemType:
+          type: string
+        brand:
+          type: string
+        quantity:
+          type: integer
+        note:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, itemType, brand, quantity, createdAt]
+
+    PosRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        repUsername:
+          type: string
+        customer:
+          type: string
+        itemType:
+          type: string
+        brand:
+          type: string
+        quantity:
+          type: integer
+        status:
+          type: string
+          enum: [Pending, Fulfilled, Cancelled]
+        createdAt:
+          type: string
+        fulfilledAt:
+          type: string
+          nullable: true
+      required: [id, repUsername, customer, itemType, brand, quantity, status, createdAt]
+
+    CreateRequestBody:
+      type: object
+      properties:
+        customer:
+          type: string
+        itemType:
+          type: string
+        brand:
+          type: string
+        quantity:
+          type: integer
+      required: [customer, itemType, brand, quantity]
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        account:
+          type: string
+        brand:
+          type: string
+          nullable: true
+        date:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        posItems:
+          type: array
+          items:
+            type: string
+        staffRequested:
+          type: integer
+        repUsername:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, cancelled]
+        staffAssigned:
+          type: array
+          items:
+            type: string
+        posApproved:
+          type: boolean
+        posRequested:
+          type: boolean
+        createdAt:
+          type: string
+        approvedAt:
+          type: string
+          nullable: true
+        approvedBy:
+          type: string
+          nullable: true
+      required: [id, title, account, date, startTime, endTime, posItems, staffRequested, repUsername, status, staffAssigned, posApproved, posRequested, createdAt]
+
+    CreateEventBody:
+      type: object
+      properties:
+        title:
+          type: string
+        account:
+          type: string
+        brand:
+          type: string
+          nullable: true
+        date:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        posItems:
+          type: array
+          items:
+            type: string
+        staffRequested:
+          type: integer
+      required: [title, account, date, startTime, endTime, posItems, staffRequested]
+
+    ToggleStaffBody:
+      type: object
+      properties:
+        staffName:
+          type: string
+      required: [staffName]
+
+    Transfer:
+      type: object
+      properties:
+        id:
+          type: integer
+        repUsername:
+          type: string
+        itemType:
+          type: string
+        brand:
+          type: string
+        quantity:
+          type: integer
+        fromAccount:
+          type: string
+        toAccount:
+          type: string
+        isReturn:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, repUsername, itemType, brand, quantity, fromAccount, toAccount, isReturn, createdAt]
+
+    CreateTransferBody:
+      type: object
+      properties:
+        itemType:
+          type: string
+        brand:
+          type: string
+        quantity:
+          type: integer
+        fromAccount:
+          type: string
+        toAccount:
+          type: string
+      required: [itemType, brand, quantity, fromAccount, toAccount]
+
+    PromoStaff:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required: [id, name]
+
+    CreatePromoStaffBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required: [name]
+
+    CatalogItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        icon:
+          type: string
+          nullable: true
+        color:
+          type: string
+          nullable: true
+        isDefault:
+          type: boolean
+        brands:
+          type: array
+          items:
+            $ref: "#/components/schemas/Brand"
+      required: [id, name, isDefault, brands]
+
+    Brand:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        catalogItemId:
+          type: integer
+        isDefault:
+          type: boolean
+      required: [id, name, catalogItemId, isDefault]
+
+    CreateCatalogItemBody:
+      type: object
+      properties:
+        name:
+          type: string
+        icon:
+          type: string
+          nullable: true
+      required: [name]
+
+    AddBrandBody:
+      type: object
+      properties:
+        catalogItemId:
+          type: integer
+        name:
+          type: string
+      required: [catalogItemId, name]
+
+    AccountAsset:
+      type: object
+      properties:
+        account:
+          type: string
+        itemType:
+          type: string
+        brand:
+          type: string
+        count:
+          type: integer
+        lastDate:
+          type: string
+          nullable: true
+      required: [account, itemType, brand, count]
