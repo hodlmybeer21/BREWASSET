@@ -15,6 +15,16 @@ export function formatDate(dateStr: string | null | undefined): string {
   }
 }
 
+export function formatTime(timeStr: string | null | undefined): string {
+  if (!timeStr) return "—";
+  const [hStr, mStr] = timeStr.split(":");
+  const h = parseInt(hStr, 10);
+  const m = mStr ?? "00";
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${m} ${ampm}`;
+}
+
 export function generateId(): number {
   return Math.floor(Math.random() * 1000000);
 }

@@ -10,7 +10,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Calendar as CalendarIcon, List, Users } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatTime } from "@/lib/utils";
 
 const EVENT_ITEMS: Record<string, { icon: string; color: string }> = {
   "Banner Requested": { icon: "🪧", color: "#e8a020" },
@@ -103,7 +103,7 @@ function CalendarTab() {
                         title={e.title}
                       >
                         <div className="font-bold truncate">{e.title}</div>
-                        <div style={{ color }} className="truncate">{e.repUsername} • {e.startTime}</div>
+                        <div style={{ color }} className="truncate">{e.repUsername} • {formatTime(e.startTime)}</div>
                       </div>
                     )
                   })}
@@ -185,7 +185,7 @@ function AllEventsTab() {
                     </div>
                     <div className="font-bold text-muted-foreground text-sm">{evt.account}</div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {formatDate(evt.date)} • {evt.startTime} - {evt.endTime} • Rep: <span className="text-primary">{evt.repUsername}</span>
+                      {formatDate(evt.date)} • {formatTime(evt.startTime)} - {formatTime(evt.endTime)} • Rep: <span className="text-primary">{evt.repUsername}</span>
                     </div>
                   </div>
                   

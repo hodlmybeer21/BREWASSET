@@ -11,7 +11,7 @@ import { ITEM_TYPES, ITEM_ICONS, ITEM_COLORS, BRANDS_BY_ITEM } from "@/lib/const
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { PackageOpen, ListOrdered, Building2, Repeat, CalendarDays, Search } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatTime } from "@/lib/utils";
 
 export default function RepView() {
   const [tab, setTab] = useState("request");
@@ -808,7 +808,7 @@ function EventsTab() {
                   </div>
                   <div className="text-muted-foreground text-sm font-bold">{evt.account}</div>
                   <div className="text-muted-foreground text-xs mt-1">
-                    {formatDate(evt.date)} • {evt.startTime} - {evt.endTime} {evt.brand ? `• ${evt.brand}` : ''}
+                    {formatDate(evt.date)} • {formatTime(evt.startTime)} - {formatTime(evt.endTime)} {evt.brand ? `• ${evt.brand}` : ''}
                   </div>
                 </div>
                 <div className="text-xs text-muted-foreground text-right space-y-1">
