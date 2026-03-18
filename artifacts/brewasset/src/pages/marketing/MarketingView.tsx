@@ -11,7 +11,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Calendar as CalendarIcon, List, Users } from "lucide-react";
 import { formatDate } from "@/lib/utils";
-import { ITEM_ICONS, ITEM_COLORS } from "@/lib/constants";
+
+const EVENT_ITEMS: Record<string, { icon: string; color: string }> = {
+  "Banner Requested": { icon: "🪧", color: "#e8a020" },
+  "Promo Bag":        { icon: "🎒", color: "#9070d0" },
+  "Sample Cups":      { icon: "🥤", color: "#60a0e8" },
+  "Raffle Items":     { icon: "🎟️", color: "#40c080" },
+};
 
 export default function MarketingView() {
   const [tab, setTab] = useState("calendar");
@@ -63,7 +69,7 @@ function CalendarTab() {
 
       <div className="flex gap-4 mb-4 text-[10px] tracking-widest uppercase">
         <div className="flex items-center gap-2 text-muted-foreground"><span className="w-3 h-3 bg-success rounded-sm"></span> Confirmed / Ready</div>
-        <div className="flex items-center gap-2 text-muted-foreground"><span className="w-3 h-3 bg-warning rounded-sm"></span> Needs Staff / POS</div>
+        <div className="flex items-center gap-2 text-muted-foreground"><span className="w-3 h-3 bg-warning rounded-sm"></span> Needs Staff / Items</div>
       </div>
 
       <Card className="overflow-hidden">
@@ -230,30 +236,33 @@ function AllEventsTab() {
                       </div>
                     </div>
 
-                    {/* POS Section */}
+                    {/* Event Items Section */}
                     <div>
-                      <h4 className="text-xs font-bold tracking-widest uppercase text-muted-foreground mb-4">POS Materials</h4>
+                      <h4 className="text-xs font-bold tracking-widest uppercase text-muted-foreground mb-4">Event Items Requested</h4>
                       {evt.posItems.length > 0 ? (
                         <div className="space-y-4">
                           <div className="flex flex-wrap gap-2">
-                            {evt.posItems.map(p => (
-                              <Badge key={p} variant="tint" color={ITEM_COLORS[p] || "#888"}>{ITEM_ICONS[p]} {p}</Badge>
-                            ))}
+                            {evt.posItems.map(p => {
+                              const meta = EVENT_ITEMS[p] || { icon: "📦", color: "#888" };
+                              return (
+                                <Badge key={p} variant="tint" color={meta.color}>{meta.icon} {p}</Badge>
+                              );
+                            })}
                           </div>
                           <div className="bg-surface2 p-3 rounded border border-border flex justify-between items-center text-sm">
                             <span className="text-muted-foreground">Status:</span>
                             <span className={evt.posApproved ? "text-success font-bold" : "text-warning font-bold"}>
-                              {evt.posApproved ? "✓ Approved" : "Pending Approval"}
+                              {evt.posApproved ? "✓ Confirmed" : "Pending Confirmation"}
                             </span>
                           </div>
                           {!evt.posApproved && evt.status === "approved" && (
                             <Button variant="success" className="w-full" onClick={() => posMutation.mutate({ id: evt.id })}>
-                              ✓ Approve POS Release
+                              ✓ Confirm Event Items
                             </Button>
                           )}
                         </div>
                       ) : (
-                        <div className="text-sm text-muted-foreground italic">No POS requested.</div>
+                        <div className="text-sm text-muted-foreground italic">No items requested.</div>
                       )}
 
                       {evt.notes && (

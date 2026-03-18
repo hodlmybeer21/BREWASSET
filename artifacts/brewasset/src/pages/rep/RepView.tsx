@@ -629,6 +629,13 @@ function TransfersTab() {
   );
 }
 
+const EVENT_ITEMS = [
+  { label: "Banner Requested", icon: "🪧", color: "#e8a020" },
+  { label: "Promo Bag",        icon: "🎒", color: "#9070d0" },
+  { label: "Sample Cups",      icon: "🥤", color: "#60a0e8" },
+  { label: "Raffle Items",     icon: "🎟️", color: "#40c080" },
+];
+
 function EventsTab() {
   const [view, setView] = useState<"list" | "new">("list");
   const { data: user } = useGetMe();
@@ -666,7 +673,7 @@ function EventsTab() {
     { query: { enabled: !!user?.username } }
   );
   const customers = (customerData || []).map(c => c.name);
-  const allBrands = Object.values(BRANDS_BY_ITEM).flat();
+  const allBrands = [...new Set(Object.values(BRANDS_BY_ITEM).flat())];
 
   const handleSubmit = () => {
     if (!evtForm.title || !evtForm.account || !evtForm.date) return;
@@ -743,21 +750,21 @@ function EventsTab() {
             </div>
 
             <div>
-              <Label>POS Materials Needed</Label>
+              <Label>Event Items Requested</Label>
               <div className="flex flex-wrap gap-2">
-                {ITEM_TYPES.map(t => {
-                  const sel = evtForm.posItems.includes(t);
+                {EVENT_ITEMS.map(item => {
+                  const sel = evtForm.posItems.includes(item.label);
                   return (
-                    <Badge 
-                      key={t} 
-                      variant={sel ? "tint" : "outline"} 
-                      color={ITEM_COLORS[t] || "#888"}
-                      className="cursor-pointer px-2 py-1.5"
-                      onClick={() => setEvtForm({...evtForm, posItems: sel ? evtForm.posItems.filter(x => x !== t) : [...evtForm.posItems, t]})}
+                    <Badge
+                      key={item.label}
+                      variant={sel ? "tint" : "outline"}
+                      color={sel ? item.color : "#555"}
+                      className="cursor-pointer px-3 py-1.5 select-none"
+                      onClick={() => setEvtForm({...evtForm, posItems: sel ? evtForm.posItems.filter(x => x !== item.label) : [...evtForm.posItems, item.label]})}
                     >
-                      {ITEM_ICONS[t]} {t}
+                      {item.icon} {item.label}
                     </Badge>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -806,7 +813,7 @@ function EventsTab() {
                 </div>
                 <div className="text-xs text-muted-foreground text-right space-y-1">
                   <div>Staff: <span className={evt.staffAssigned.length >= evt.staffRequested ? 'text-success font-bold' : 'text-warning font-bold'}>{evt.staffAssigned.length}/{evt.staffRequested}</span></div>
-                  <div>POS: {evt.posItems.length === 0 ? "None" : evt.posApproved ? <span className="text-success font-bold">✓ Approved</span> : <span className="text-warning">Pending</span>}</div>
+                  <div>Items: {evt.posItems.length === 0 ? <span className="text-muted-foreground">None</span> : evt.posApproved ? <span className="text-success font-bold">✓ Confirmed</span> : <span className="text-warning">{evt.posItems.length} requested</span>}</div>
                 </div>
               </CardContent>
             </Card>
