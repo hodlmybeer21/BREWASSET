@@ -10,7 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { Calendar as CalendarIcon, List, Users, BarChart2, Download, ChevronDown, ChevronUp, ImageIcon } from "lucide-react";
+import { Calendar as CalendarIcon, List, Users, BarChart2, Download, ChevronDown, ChevronUp, ImageIcon, Pencil, Check, X } from "lucide-react";
 import { formatDate, formatTime } from "@/lib/utils";
 
 const EVENT_ITEMS: Record<string, { icon: string; color: string }> = {
@@ -296,11 +296,27 @@ function StaffTab() {
   const createMutation = useCreatePromoStaff({
     mutation: { onSuccess: () => { toast({ title: "Staff added" }); queryClient.invalidateQueries({ queryKey: getGetPromoStaffQueryKey() }); setForm({ name: "", phone: "", email: "", notes: "" }); } }
   });
+  const updateMutation = useUpdatePromoStaff({
+    mutation: { onSuccess: () => { toast({ title: "Contact info updated" }); queryClient.invalidateQueries({ queryKey: getGetPromoStaffQueryKey() }); } }
+  });
   const deleteMutation = useDeletePromoStaff({
     mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetPromoStaffQueryKey() }) }
   });
 
   const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", phone: "", email: "", notes: "" });
+
+  const startEdit = (s: any) => {
+    setEditingId(s.id);
+    setEditForm({ name: s.name, phone: s.phone ?? "", email: s.email ?? "", notes: s.notes ?? "" });
+  };
+
+  const saveEdit = (id: number) => {
+    updateMutation.mutate({ id, data: editForm }, {
+      onSuccess: () => setEditingId(null),
+    });
+  };
 
   const handleAdd = () => {
     if (!form.name) return;
@@ -347,27 +363,110 @@ function StaffTab() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {staff?.map(s => (
-            <Card key={s.id} className="hover:border-[#9070d0]/50 transition-colors">
-              <CardContent className="p-5 flex flex-col justify-between h-full">
-                <div>
-                  <div className="flex justify-between items-start mb-2">
+          {staff?.map(s => {
+            const isEditing = editingId === s.id;
+            return (
+              <Card key={s.id} className={`transition-colors ${isEditing ? "border-[#9070d0]/60" : "hover:border-[#9070d0]/30"}`}>
+                <CardContent className="p-5">
+                  {/* Header row */}
+                  <div className="flex justify-between items-start mb-3">
                     <h3 className="text-lg font-bold text-foreground">{s.name}</h3>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => deleteMutation.mutate({ id: s.id })}>✕</Button>
+                    <div className="flex items-center gap-1">
+                      {!isEditing && (
+                        <Button
+                          variant="ghost" size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-[#9070d0]"
+                          onClick={() => startEdit(s)}
+                          title="Edit contact info"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost" size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        onClick={() => deleteMutation.mutate({ id: s.id })}
+                        title="Remove from roster"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    {s.phone && <div>📞 {s.phone}</div>}
-                    {s.email && <div>✉️ {s.email}</div>}
-                  </div>
-                  {s.notes && (
-                    <div className="mt-3 text-[10px] uppercase tracking-widest text-[#9070d0] bg-[#9070d0]/10 p-2 rounded">
-                      {s.notes}
+
+                  {/* View mode */}
+                  {!isEditing && (
+                    <div className="text-xs text-muted-foreground space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base leading-none">📞</span>
+                        <span>{s.phone || <span className="italic opacity-50">No phone</span>}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-base leading-none">✉️</span>
+                        <span>{s.email || <span className="italic opacity-50">No email</span>}</span>
+                      </div>
+                      {s.notes && (
+                        <div className="mt-2 text-[10px] uppercase tracking-widest text-[#9070d0] bg-[#9070d0]/10 p-2 rounded">
+                          {s.notes}
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                  {/* Edit mode */}
+                  {isEditing && (
+                    <div className="space-y-2.5">
+                      <div>
+                        <Label className="text-[10px]">Phone</Label>
+                        <Input
+                          value={editForm.phone}
+                          onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                          placeholder="555-0199"
+                          className="h-8 text-sm"
+                          autoFocus
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-[10px]">Email</Label>
+                        <Input
+                          value={editForm.email}
+                          onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                          placeholder="name@example.com"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-[10px]">Notes</Label>
+                        <Input
+                          value={editForm.notes}
+                          onChange={e => setEditForm({ ...editForm, notes: e.target.value })}
+                          placeholder="Specialties, region..."
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="flex gap-2 pt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 h-8 text-xs"
+                          onClick={() => setEditingId(null)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="flex-1 h-8 text-xs bg-[#9070d0] hover:bg-[#8060c0] text-white border-0"
+                          onClick={() => saveEdit(s.id)}
+                          disabled={updateMutation.isPending}
+                        >
+                          <Check className="w-3.5 h-3.5 mr-1" /> Save
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </FadeIn>
