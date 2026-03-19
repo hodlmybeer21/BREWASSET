@@ -18,6 +18,7 @@ export const eventsTable = pgTable("events", {
   staffAssigned: text("staff_assigned").default("[]").notNull(), // JSON array of names
   posApproved: boolean("pos_approved").default(false).notNull(),
   posRequested: boolean("pos_requested").default(false).notNull(),
+  repOrSupplierPresent: boolean("rep_or_supplier_present").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   approvedAt: timestamp("approved_at"),
   approvedBy: text("approved_by"),

@@ -166,7 +166,7 @@ function AllEventsTab() {
       <div className="space-y-4">
         {evts.map(evt => {
           const isExpanded = expandedId === evt.id;
-          const needsStaff = evt.staffAssigned.length < evt.staffRequested;
+          const needsStaff = !evt.repOrSupplierPresent && evt.staffAssigned.length < evt.staffRequested;
           const needsPos = evt.posItems.length > 0 && !evt.posApproved;
           
           let statusColor = "var(--color-border)";
@@ -187,8 +187,13 @@ function AllEventsTab() {
                       </Badge>
                     </div>
                     <div className="font-bold text-muted-foreground text-sm">{evt.account}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {formatDate(evt.date)} • {formatTime(evt.startTime)} - {formatTime(evt.endTime)} • Rep: <span className="text-primary">{evt.repUsername}</span>
+                    <div className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span>{formatDate(evt.date)} • {formatTime(evt.startTime)} - {formatTime(evt.endTime)} • Rep: <span className="text-primary">{evt.repUsername}</span></span>
+                      {evt.repOrSupplierPresent && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#e8a020] bg-[#e8a020]/10 border border-[#e8a020]/30 px-1.5 py-0.5 rounded">
+                          👤 Rep/Supplier Present
+                        </span>
+                      )}
                     </div>
                   </div>
                   

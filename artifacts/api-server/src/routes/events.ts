@@ -40,7 +40,8 @@ const createEventSchema = z.object({
   endTime: z.string(),
   notes: z.string().optional().nullable(),
   posItems: z.array(z.string()),
-  staffRequested: z.number().int().min(1),
+  staffRequested: z.number().int().min(0),
+  repOrSupplierPresent: z.boolean().optional().default(false),
 });
 
 router.post("/", async (req: Request, res: Response) => {
@@ -66,6 +67,7 @@ router.post("/", async (req: Request, res: Response) => {
       staffAssigned: "[]",
       posApproved: false,
       posRequested: body.posItems.length > 0,
+      repOrSupplierPresent: body.repOrSupplierPresent ?? false,
     }).returning();
 
     res.json(parseEvent(created));

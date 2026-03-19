@@ -119,6 +119,7 @@ export interface Event {
   staffAssigned: string[];
   posApproved: boolean;
   posRequested: boolean;
+  repOrSupplierPresent: boolean;
   createdAt: string;
   approvedAt?: string | null;
   approvedBy?: string | null;
@@ -134,6 +135,7 @@ export interface CreateEventBody {
   notes?: string | null;
   posItems: string[];
   staffRequested: number;
+  repOrSupplierPresent?: boolean;
 }
 
 export interface ToggleStaffBody {

@@ -649,7 +649,7 @@ function EventsTab() {
         toast({ title: "Event submitted for approval", className: "bg-success text-success-foreground" });
         queryClient.invalidateQueries({ queryKey: getGetEventsQueryKey() });
         setView("list");
-        setEvtForm({ title: "", account: "", brand: "", date: "", startTime: "18:00", endTime: "21:00", notes: "", posItems: [], staffRequested: 1 });
+        setEvtForm({ title: "", account: "", brand: "", date: "", startTime: "18:00", endTime: "21:00", notes: "", posItems: [], staffRequested: 1, repOrSupplierPresent: false });
       }
     }
   });
@@ -664,7 +664,7 @@ function EventsTab() {
   });
 
   const [evtForm, setEvtForm] = useState({
-    title: "", account: "", brand: "", date: "", startTime: "18:00", endTime: "21:00", notes: "", posItems: [] as string[], staffRequested: 1
+    title: "", account: "", brand: "", date: "", startTime: "18:00", endTime: "21:00", notes: "", posItems: [] as string[], staffRequested: 1, repOrSupplierPresent: false
   });
   const [searchAccount, setSearchAccount] = useState("");
 
@@ -738,15 +738,26 @@ function EventsTab() {
               </div>
             </div>
 
-            <div>
+            <div className="space-y-3">
               <Label>Promo Staff Needed</Label>
               <div className="flex gap-2">
-                {[1,2,3,4].map(n => (
+                {[0,1,2,3,4].map(n => (
                   <Button key={n} variant={evtForm.staffRequested === n ? "primary" : "outline"} onClick={() => setEvtForm({...evtForm, staffRequested: n})}>
                     {n}
                   </Button>
                 ))}
               </div>
+              <label className="flex items-center gap-2.5 cursor-pointer select-none group">
+                <input
+                  type="checkbox"
+                  checked={evtForm.repOrSupplierPresent}
+                  onChange={e => setEvtForm({...evtForm, repOrSupplierPresent: e.target.checked})}
+                  className="w-4 h-4 rounded border border-border accent-amber-500 cursor-pointer"
+                />
+                <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                  Sales rep or supplier will be present in place of promo staff
+                </span>
+              </label>
             </div>
 
             <div>
