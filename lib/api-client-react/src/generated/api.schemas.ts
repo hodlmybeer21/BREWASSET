@@ -29,6 +29,7 @@ export const UserRole = {
   rep: "rep",
   warehouse: "warehouse",
   marketing: "marketing",
+  staff: "staff",
 } as const;
 
 export interface User {
@@ -214,6 +215,38 @@ export type GetRequestsParams = {
 
 export type GetEventsParams = {
   repUsername?: string;
+  staffName?: string;
+};
+
+export interface StaffLoginRequest {
+  staffName: string;
+  password: string;
+}
+
+export interface EventReport {
+  id: number;
+  eventId: number;
+  staffName: string;
+  attendeeCount: number | null;
+  servedCount: number | null;
+  brandComments: string | null;
+  totalSpend: string | null;
+  imageUrls: string[];
+  submittedAt: string;
+  updatedAt: string;
+}
+
+export interface SubmitEventReportRequest {
+  staffName: string;
+  attendeeCount?: number | null;
+  servedCount?: number | null;
+  brandComments?: string | null;
+  totalSpend?: string | null;
+  imageUrls?: string[];
+}
+
+export type GetEventReportParams = {
+  staffName?: string;
 };
 
 export type GetTransfersParams = {

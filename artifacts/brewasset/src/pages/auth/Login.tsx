@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useLogin, useGetMe } from "@workspace/api-client-react";
+import { useLogin, useGetMe, useStaffLogin, useGetPromoStaff } from "@workspace/api-client-react";
 import { Card, Button, Input, Select, FadeIn } from "@/components/ui/core";
-import { Hexagon, Warehouse, Users, CalendarDays, Loader2, Eye, EyeOff, X } from "lucide-react";
+import { Hexagon, Warehouse, Users, CalendarDays, Star, Loader2, Eye, EyeOff, X } from "lucide-react";
 import { ALL_REPS, REP_DISPLAY_NAMES } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 
-type ActivePanel = "rep" | "warehouse" | "marketing" | null;
+type ActivePanel = "rep" | "warehouse" | "marketing" | "staff" | null;
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -18,10 +18,14 @@ export default function Login() {
 
   const { data: user, isLoading } = useGetMe();
 
+  const { data: promoStaff } = useGetPromoStaff();
+  const [selectedStaff, setSelectedStaff] = useState("");
+
   useEffect(() => {
     if (user) {
       if (user.role === "warehouse") setLocation("/warehouse");
       else if (user.role === "marketing") setLocation("/marketing");
+      else if (user.role === "staff") setLocation("/staff");
       else setLocation("/rep");
     }
   }, [user, setLocation]);
@@ -31,6 +35,7 @@ export default function Login() {
       onSuccess: (data) => {
         if (data.user.role === "warehouse") setLocation("/warehouse");
         else if (data.user.role === "marketing") setLocation("/marketing");
+        else if (data.user.role === "staff") setLocation("/staff");
         else setLocation("/rep");
       },
       onError: () => {
@@ -39,6 +44,16 @@ export default function Login() {
           description: "Incorrect password. Please try again.",
           variant: "destructive"
         });
+        setPassword("");
+      }
+    }
+  });
+
+  const staffLoginMutation = useStaffLogin({
+    mutation: {
+      onSuccess: () => setLocation("/staff"),
+      onError: () => {
+        toast({ title: "Login Failed", description: "Incorrect password. Please try again.", variant: "destructive" });
         setPassword("");
       }
     }
@@ -184,6 +199,49 @@ export default function Login() {
                 Rep Login
               </Button>
             </div>
+
+            {/* Promo Staff */}
+            {activePanel === "staff" ? (
+              <div className="space-y-3 p-4 rounded-lg border border-purple-500/30 bg-purple-500/5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 text-purple-400">
+                    <Star className="w-4 h-4" />
+                    <span className="text-xs font-bold tracking-widest uppercase">Promo Staff</span>
+                  </div>
+                  <button onClick={closePanel} className="text-muted-foreground hover:text-foreground">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <Select
+                  value={selectedStaff}
+                  onChange={(e) => setSelectedStaff(e.target.value)}
+                  className="h-11 bg-background/50"
+                >
+                  <option value="">Select your name...</option>
+                  {promoStaff?.map((s: any) => (
+                    <option key={s.id} value={s.name}>{s.name}</option>
+                  ))}
+                </Select>
+                <PasswordField onSubmit={() => selectedStaff && staffLoginMutation.mutate({ data: { staffName: selectedStaff, password } })} />
+                <Button
+                  className="w-full h-11 text-sm bg-purple-600 hover:bg-purple-700 text-white border-0"
+                  onClick={() => staffLoginMutation.mutate({ data: { staffName: selectedStaff, password } })}
+                  disabled={!selectedStaff || !password || staffLoginMutation.isPending}
+                >
+                  {staffLoginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="secondary"
+                className="w-full h-12 text-purple-400 border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10"
+                onClick={() => openPanel("staff")}
+                disabled={loginMutation.isPending}
+              >
+                <Star className="w-4 h-4 mr-3 opacity-70" />
+                Promo Staff Login
+              </Button>
+            )}
 
             {/* Marketing */}
             {activePanel === "marketing" ? (

@@ -1,15 +1,19 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db/schema";
+import { usersTable, promoStaffTable } from "@workspace/db/schema";
+
 import { eq } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "../lib/auth.js";
 import { z } from "zod";
+
+const STAFF_SHARED_PASSWORD = "staff2026";
 
 const router: IRouter = Router();
 
 declare module "express-session" {
   interface SessionData {
     userId?: number;
+    staffId?: number;
   }
 }
 
@@ -34,6 +38,32 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
+const staffLoginSchema = z.object({
+  staffName: z.string().min(1),
+  password: z.string().min(1),
+});
+
+router.post("/staff-login", async (req: Request, res: Response) => {
+  try {
+    const body = staffLoginSchema.parse(req.body);
+    if (body.password !== STAFF_SHARED_PASSWORD) {
+      res.status(401).json({ error: "Invalid password" });
+      return;
+    }
+    const rows = await db.select().from(promoStaffTable).where(eq(promoStaffTable.name, body.staffName));
+    const staff = rows[0];
+    if (!staff) {
+      res.status(404).json({ error: "Staff member not found" });
+      return;
+    }
+    req.session.staffId = staff.id;
+    req.session.userId = undefined;
+    res.json({ id: staff.id, username: staff.name, role: "staff", displayName: staff.name });
+  } catch (err) {
+    res.status(400).json({ error: "Invalid request" });
+  }
+});
+
 router.post("/logout", (req: Request, res: Response) => {
   req.session.destroy(() => {
     res.json({ success: true, message: "Logged out" });
@@ -41,6 +71,14 @@ router.post("/logout", (req: Request, res: Response) => {
 });
 
 router.get("/me", async (req: Request, res: Response) => {
+  if (req.session.staffId) {
+    const rows = await db.select().from(promoStaffTable).where(eq(promoStaffTable.id, req.session.staffId));
+    const staff = rows[0];
+    if (staff) {
+      res.json({ id: staff.id, username: staff.name, role: "staff", displayName: staff.name });
+      return;
+    }
+  }
   if (!req.session.userId) {
     res.status(401).json({ error: "Not authenticated" });
     return;
@@ -55,7 +93,7 @@ router.get("/me", async (req: Request, res: Response) => {
 });
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.userId) {
+  if (!req.session.userId && !req.session.staffId) {
     res.status(401).json({ error: "Not authenticated" });
     return;
   }

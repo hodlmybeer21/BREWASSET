@@ -6,6 +6,7 @@ import Login from "@/pages/auth/Login";
 import RepView from "@/pages/rep/RepView";
 import WarehouseView from "@/pages/warehouse/WarehouseView";
 import MarketingView from "@/pages/marketing/MarketingView";
+import PromoStaffView from "@/pages/staff/PromoStaffView";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/rep" component={RepView} />
       <Route path="/warehouse" component={WarehouseView} />
       <Route path="/marketing" component={MarketingView} />
+      <Route path="/staff" component={PromoStaffView} />
       <Route component={NotFound} />
     </Switch>
   );

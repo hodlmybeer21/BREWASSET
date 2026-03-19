@@ -7,3 +7,4 @@ export * from "./transfers";
 export * from "./staff";
 export * from "./account_assets";
 export * from "./customers";
+export * from "./event_reports";

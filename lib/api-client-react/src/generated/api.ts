@@ -28,8 +28,10 @@ import type {
   CustomerRecord,
   ErrorResponse,
   Event,
+  EventReport,
   GetAccountAssetsParams,
   GetCustomersParams,
+  GetEventReportParams,
   GetEventsParams,
   GetRequestsParams,
   GetTransfersParams,
@@ -41,6 +43,8 @@ import type {
   PromoStaff,
   ReceiveHistoryItem,
   ReceiveStockRequest,
+  StaffLoginRequest,
+  SubmitEventReportRequest,
   SuccessResponse,
   ToggleStaffBody,
   Transfer,
@@ -2633,3 +2637,86 @@ export function useGetCustomers<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+// ─── Staff Auth ───────────────────────────────────────────────────────────────
+
+export const staffLogin = async (
+  data: StaffLoginRequest,
+  options?: RequestInit,
+): Promise<User> => {
+  return customFetch<User>(`/api/auth/staff-login`, {
+    ...options,
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const useStaffLogin = (options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof staffLogin>>, ErrorType<unknown>, { data: StaffLoginRequest }>;
+}) => {
+  const { mutation: mutationOptions } = options ?? {};
+  return useMutation<Awaited<ReturnType<typeof staffLogin>>, ErrorType<unknown>, { data: StaffLoginRequest }>({
+    mutationFn: ({ data }) => staffLogin(data),
+    ...mutationOptions,
+  });
+};
+
+// ─── Event Reports ────────────────────────────────────────────────────────────
+
+export const getGetEventReportUrl = (id: number, params?: GetEventReportParams) => {
+  const normalizedParams = new URLSearchParams();
+  if (params?.staffName !== undefined) normalizedParams.append("staffName", params.staffName);
+  const stringifiedParams = normalizedParams.toString();
+  return stringifiedParams.length > 0
+    ? `/api/events/${id}/report?${stringifiedParams}`
+    : `/api/events/${id}/report`;
+};
+
+export const getEventReport = async (
+  id: number,
+  params?: GetEventReportParams,
+  options?: RequestInit,
+): Promise<EventReport> => {
+  return customFetch<EventReport>(getGetEventReportUrl(id, params), { ...options, method: "GET" });
+};
+
+export const getGetEventReportQueryKey = (id: number, params?: GetEventReportParams) =>
+  [`/api/events/${id}/report`, ...(params ? [params] : [])] as const;
+
+export const useGetEventReport = <TData = Awaited<ReturnType<typeof getEventReport>>, TError = ErrorType<unknown>>(
+  id: number,
+  params?: GetEventReportParams,
+  options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getEventReport>>, TError, TData>; },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+  const queryOptions: UseQueryOptions<Awaited<ReturnType<typeof getEventReport>>, TError, TData> = {
+    queryKey: getGetEventReportQueryKey(id, params),
+    queryFn: () => getEventReport(id, params),
+    enabled: id > 0,
+    retry: (count, err: any) => err?.status === 404 ? false : count < 1,
+    ...options?.query,
+  };
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey! };
+};
+
+export const submitEventReport = async (
+  id: number,
+  data: SubmitEventReportRequest,
+  options?: RequestInit,
+): Promise<EventReport> => {
+  return customFetch<EventReport>(`/api/events/${id}/report`, {
+    ...options,
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const useSubmitEventReport = (options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof submitEventReport>>, ErrorType<unknown>, { id: number; data: SubmitEventReportRequest }>;
+}) => {
+  const { mutation: mutationOptions } = options ?? {};
+  return useMutation<Awaited<ReturnType<typeof submitEventReport>>, ErrorType<unknown>, { id: number; data: SubmitEventReportRequest }>({
+    mutationFn: ({ id, data }) => submitEventReport(id, data),
+    ...mutationOptions,
+  });
+};

@@ -20,11 +20,12 @@ Full-stack POS Room & Warehouse Management System for a beer distribution compan
 
 ## User Roles & Credentials
 
-| Role | Username | Password |
-|------|----------|----------|
+| Role | Username / Selector | Password |
+|------|---------------------|----------|
 | Warehouse Staff | `warehouse` | `warehouse123` |
 | Marketing Manager | `marketing` | `marketing123` |
-| Sales Reps (46 total) | e.g. `maanderson`, `adennis`, etc. | `brewasset2026` |
+| Sales Reps (29) | Individual name from dropdown | `FirstName2026` pattern (duplicates have last initial) |
+| Promo Staff | Name dropdown (from `promo_staff` table) | `staff2026` (shared) |
 
 ## Structure
 

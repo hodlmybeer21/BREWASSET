@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { db } from "@workspace/db";
-import { eventsTable, usersTable } from "@workspace/db/schema";
+import { eventsTable, usersTable, eventReportsTable } from "@workspace/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 
@@ -18,9 +18,16 @@ function parseEvent(e: typeof eventsTable.$inferSelect) {
 
 router.get("/", async (req: Request, res: Response) => {
   const rows = await db.select().from(eventsTable).orderBy(desc(eventsTable.createdAt));
-  const filtered = req.query.repUsername
-    ? rows.filter(r => r.repUsername === req.query.repUsername)
-    : rows;
+  let filtered = rows;
+  if (req.query.repUsername) {
+    filtered = rows.filter(r => r.repUsername === req.query.repUsername);
+  } else if (req.query.staffName) {
+    const name = req.query.staffName as string;
+    filtered = rows.filter(r => {
+      const assigned: string[] = JSON.parse(r.staffAssigned || "[]");
+      return assigned.includes(name);
+    });
+  }
   res.json(filtered.map(parseEvent));
 });
 
@@ -111,6 +118,60 @@ router.post("/:id/approve-pos", async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
   await db.update(eventsTable).set({ posApproved: true }).where(eq(eventsTable.id, id));
   res.json({ success: true, message: "POS approved" });
+});
+
+const reportSchema = z.object({
+  staffName: z.string(),
+  attendeeCount: z.number().int().nullable().optional(),
+  servedCount: z.number().int().nullable().optional(),
+  brandComments: z.string().nullable().optional(),
+  totalSpend: z.string().nullable().optional(),
+  imageUrls: z.array(z.string()).optional(),
+});
+
+router.get("/:id/report", async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id);
+  const staffName = req.query.staffName as string | undefined;
+  let query = db.select().from(eventReportsTable).where(eq(eventReportsTable.eventId, id));
+  const reports = await query;
+  const report = staffName ? reports.find(r => r.staffName === staffName) : reports[0];
+  if (!report) { res.status(404).json({ error: "No report found" }); return; }
+  res.json({ ...report, imageUrls: JSON.parse(report.imageUrls || "[]") });
+});
+
+router.post("/:id/report", async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    const body = reportSchema.parse(req.body);
+
+    const existing = await db.select().from(eventReportsTable)
+      .where(eq(eventReportsTable.eventId, id));
+    const existingForStaff = existing.find(r => r.staffName === body.staffName);
+
+    const values = {
+      eventId: id,
+      staffName: body.staffName,
+      attendeeCount: body.attendeeCount ?? null,
+      servedCount: body.servedCount ?? null,
+      brandComments: body.brandComments ?? null,
+      totalSpend: body.totalSpend ?? null,
+      imageUrls: JSON.stringify(body.imageUrls || []),
+      updatedAt: new Date(),
+    };
+
+    if (existingForStaff) {
+      const [updated] = await db.update(eventReportsTable)
+        .set(values)
+        .where(eq(eventReportsTable.id, existingForStaff.id))
+        .returning();
+      res.json({ ...updated, imageUrls: JSON.parse(updated.imageUrls || "[]") });
+    } else {
+      const [created] = await db.insert(eventReportsTable).values(values).returning();
+      res.json({ ...created, imageUrls: JSON.parse(created.imageUrls || "[]") });
+    }
+  } catch (err) {
+    res.status(400).json({ error: "Invalid request" });
+  }
 });
 
 export default router;
