@@ -29,6 +29,7 @@ import type {
   ErrorResponse,
   Event,
   EventReport,
+  EventReportWithEvent,
   GetAccountAssetsParams,
   GetCustomersParams,
   GetEventReportParams,
@@ -2719,4 +2720,27 @@ export const useSubmitEventReport = (options?: {
     mutationFn: ({ id, data }) => submitEventReport(id, data),
     ...mutationOptions,
   });
+};
+
+// ─── All Event Reports (Marketing ROI) ───────────────────────────────────────
+
+export const getGetAllEventReportsQueryKey = () => [`/api/events/reports`] as const;
+
+export const getAllEventReports = async (options?: RequestInit): Promise<EventReportWithEvent[]> => {
+  return customFetch<EventReportWithEvent[]>(`/api/events/reports`, { ...options, method: "GET" });
+};
+
+export const useGetAllEventReports = <
+  TData = Awaited<ReturnType<typeof getAllEventReports>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getAllEventReports>>, TError, TData>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+  const queryOptions: UseQueryOptions<Awaited<ReturnType<typeof getAllEventReports>>, TError, TData> = {
+    queryKey: getGetAllEventReportsQueryKey(),
+    queryFn: () => getAllEventReports(),
+    ...options?.query,
+  };
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey! };
 };

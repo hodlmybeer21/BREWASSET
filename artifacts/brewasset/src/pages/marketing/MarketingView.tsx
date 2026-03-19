@@ -5,11 +5,12 @@ import { FadeIn, Card, CardHeader, CardContent, Badge, Button, Input, Select, La
 import { 
   useGetEvents, useApproveEvent, useCancelEvent, useToggleEventStaff, useApprovePOS,
   useGetPromoStaff, useCreatePromoStaff, useUpdatePromoStaff, useDeletePromoStaff,
+  useGetAllEventReports,
   getGetEventsQueryKey, getGetPromoStaffQueryKey
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { Calendar as CalendarIcon, List, Users } from "lucide-react";
+import { Calendar as CalendarIcon, List, Users, BarChart2, Download, ChevronDown, ChevronUp, ImageIcon } from "lucide-react";
 import { formatDate, formatTime } from "@/lib/utils";
 
 const EVENT_ITEMS: Record<string, { icon: string; color: string }> = {
@@ -28,6 +29,7 @@ export default function MarketingView() {
     { id: "calendar", label: "Calendar", icon: <CalendarIcon className="w-4 h-4" /> },
     { id: "events", label: `All Events ${pendingCount > 0 ? `(${pendingCount})` : ''}`, icon: <List className="w-4 h-4" /> },
     { id: "staff", label: "Staff", icon: <Users className="w-4 h-4" /> },
+    { id: "roi", label: "Event ROI", icon: <BarChart2 className="w-4 h-4" /> },
   ];
 
   return (
@@ -35,6 +37,7 @@ export default function MarketingView() {
       {tab === "calendar" && <CalendarTab />}
       {tab === "events" && <AllEventsTab />}
       {tab === "staff" && <StaffTab />}
+      {tab === "roi" && <ROITab />}
     </AppLayout>
   );
 }
@@ -366,6 +369,205 @@ function StaffTab() {
             </Card>
           ))}
         </div>
+      </div>
+    </FadeIn>
+  );
+}
+
+// ─── Event ROI Tab ────────────────────────────────────────────────────────────
+
+function ROITab() {
+  const { data: reports = [], isLoading } = useGetAllEventReports();
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  const totalAttendees = reports.reduce((s, r) => s + (r.attendeeCount ?? 0), 0);
+  const totalServed    = reports.reduce((s, r) => s + (r.servedCount ?? 0), 0);
+  const totalSpend     = reports.reduce((s, r) => s + parseFloat(r.totalSpend ?? "0"), 0);
+  const totalPhotos    = reports.reduce((s, r) => s + (r.imageUrls?.length ?? 0), 0);
+
+  const downloadImage = (dataUrl: string, filename: string) => {
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = filename;
+    a.click();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-20">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <FadeIn>
+      <div className="space-y-6">
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: "Reports Submitted", value: reports.length, color: "#e8a020" },
+            { label: "Total Attendees",   value: totalAttendees.toLocaleString(), color: "#60a0e8" },
+            { label: "Total Served",      value: totalServed.toLocaleString(),    color: "#40c080" },
+            { label: "Total Spend",       value: totalSpend > 0 ? `$${totalSpend.toFixed(2)}` : "—", color: "#c080e0" },
+          ].map(stat => (
+            <Card key={stat.label} className="p-4 text-center">
+              <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">{stat.label}</p>
+            </Card>
+          ))}
+        </div>
+
+        {/* Reports List */}
+        {reports.length === 0 ? (
+          <div className="text-center py-20 text-muted-foreground">
+            <BarChart2 className="w-12 h-12 mx-auto mb-3 opacity-20" />
+            <p className="text-sm">No event reports submitted yet.</p>
+            <p className="text-xs mt-1 opacity-60">Promo staff will submit reports after each event.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {reports.map(r => {
+              const isOpen = expanded === r.id;
+              const ev = r.event;
+              return (
+                <Card key={r.id} className="overflow-hidden">
+                  {/* Header row */}
+                  <button
+                    className="w-full text-left p-4 hover:bg-white/5 transition-colors"
+                    onClick={() => setExpanded(isOpen ? null : r.id)}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-sm truncate">
+                            {ev?.title ?? `Event #${r.eventId}`}
+                          </span>
+                          {r.imageUrls?.length > 0 && (
+                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground bg-surface px-1.5 py-0.5 rounded">
+                              <ImageIcon className="w-3 h-3" /> {r.imageUrls.length}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                          {ev && <span>{formatDate(ev.date)} · {ev.account}</span>}
+                          <span>Staff: <span className="text-foreground">{r.staffName}</span></span>
+                          <span>Submitted: {new Date(r.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                        </div>
+                      </div>
+
+                      {/* Quick stats */}
+                      <div className="flex items-center gap-4 flex-shrink-0 text-right">
+                        {r.attendeeCount != null && (
+                          <div>
+                            <p className="text-sm font-bold text-[#60a0e8]">{r.attendeeCount}</p>
+                            <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Attended</p>
+                          </div>
+                        )}
+                        {r.servedCount != null && (
+                          <div>
+                            <p className="text-sm font-bold text-[#40c080]">{r.servedCount}</p>
+                            <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Served</p>
+                          </div>
+                        )}
+                        {r.totalSpend && (
+                          <div>
+                            <p className="text-sm font-bold text-[#c080e0]">${r.totalSpend}</p>
+                            <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Spend</p>
+                          </div>
+                        )}
+                        {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground ml-1" /> : <ChevronDown className="w-4 h-4 text-muted-foreground ml-1" />}
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Expanded detail */}
+                  {isOpen && (
+                    <div className="border-t border-border/50 p-4 space-y-4">
+
+                      {/* Brand comments */}
+                      {r.brandComments && (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Notes / Brand Comments</p>
+                          <p className="text-sm bg-surface rounded p-3 whitespace-pre-wrap">{r.brandComments}</p>
+                        </div>
+                      )}
+
+                      {/* Stats grid */}
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { label: "Attendees", value: r.attendeeCount },
+                          { label: "Served", value: r.servedCount },
+                          { label: "Spend", value: r.totalSpend ? `$${r.totalSpend}` : null },
+                        ].map(s => s.value != null && (
+                          <div key={s.label} className="bg-surface rounded p-3 text-center">
+                            <p className="text-lg font-bold text-primary">{s.value}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Conversion rate */}
+                      {r.attendeeCount && r.servedCount && r.attendeeCount > 0 && (
+                        <div className="flex items-center gap-3 text-sm">
+                          <span className="text-muted-foreground text-xs uppercase tracking-wider">Conversion rate</span>
+                          <div className="flex-1 bg-surface rounded-full h-2 overflow-hidden">
+                            <div
+                              className="h-full bg-green-500 rounded-full"
+                              style={{ width: `${Math.min(100, Math.round((r.servedCount / r.attendeeCount) * 100))}%` }}
+                            />
+                          </div>
+                          <span className="font-bold text-green-400 text-sm">
+                            {Math.round((r.servedCount / r.attendeeCount) * 100)}%
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Photos */}
+                      {r.imageUrls?.length > 0 && (
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                              Photos ({r.imageUrls.length})
+                            </p>
+                            <button
+                              className="text-[10px] uppercase tracking-wider text-primary hover:text-primary/80 flex items-center gap-1"
+                              onClick={() => r.imageUrls.forEach((url, i) =>
+                                downloadImage(url, `${(ev?.title ?? "event").replace(/\s+/g, "-")}-${r.staffName.replace(/\s+/g, "")}-photo${i + 1}.jpg`)
+                              )}
+                            >
+                              <Download className="w-3 h-3" /> Download All
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {r.imageUrls.map((url, i) => (
+                              <div key={i} className="relative group rounded overflow-hidden aspect-square bg-surface">
+                                <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                                <button
+                                  className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                  onClick={() => downloadImage(url, `${(ev?.title ?? "event").replace(/\s+/g, "-")}-${r.staffName.replace(/\s+/g, "")}-photo${i + 1}.jpg`)}
+                                >
+                                  <Download className="w-5 h-5 text-white" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {totalPhotos > 0 && (
+          <p className="text-center text-xs text-muted-foreground">{totalPhotos} total photos across all reports</p>
+        )}
+
       </div>
     </FadeIn>
   );

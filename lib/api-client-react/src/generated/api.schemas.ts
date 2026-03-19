@@ -249,6 +249,10 @@ export type GetEventReportParams = {
   staffName?: string;
 };
 
+export interface EventReportWithEvent extends EventReport {
+  event: Event | null;
+}
+
 export type GetTransfersParams = {
   repUsername?: string;
 };

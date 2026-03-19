@@ -120,6 +120,17 @@ router.post("/:id/approve-pos", async (req: Request, res: Response) => {
   res.json({ success: true, message: "POS approved" });
 });
 
+router.get("/reports", async (req: Request, res: Response) => {
+  const reports = await db.select().from(eventReportsTable).orderBy(desc(eventReportsTable.submittedAt));
+  const events = await db.select().from(eventsTable);
+  const eventsById = Object.fromEntries(events.map(e => [e.id, e]));
+  res.json(reports.map(r => ({
+    ...r,
+    imageUrls: JSON.parse(r.imageUrls || "[]"),
+    event: eventsById[r.eventId] ? parseEvent(eventsById[r.eventId]) : null,
+  })));
+});
+
 const reportSchema = z.object({
   staffName: z.string(),
   attendeeCount: z.number().int().nullable().optional(),
