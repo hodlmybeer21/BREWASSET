@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetMe,
   useLogout,
   useGetEvents,
   useGetEventReport,
   useSubmitEventReport,
+  getGetMeQueryKey,
 } from "@workspace/api-client-react";
 import { Card, Button, Input } from "@/components/ui/core";
 import {
@@ -254,10 +256,19 @@ function EventCard({ event, staffName }: { event: any; staffName: string }) {
 export default function PromoStaffView() {
   const [, setLocation] = useLocation();
   const { data: me, isLoading: meLoading } = useGetMe();
+  const queryClient = useQueryClient();
   const logoutMutation = useLogout({
     mutation: {
-      onSuccess: () => setLocation("/"),
-      onError: () => setLocation("/"),
+      onSuccess: () => {
+        queryClient.setQueryData(getGetMeQueryKey(), null);
+        queryClient.clear();
+        setLocation("/");
+      },
+      onError: () => {
+        queryClient.setQueryData(getGetMeQueryKey(), null);
+        queryClient.clear();
+        setLocation("/");
+      },
     },
   });
   const [filter, setFilter] = useState<"upcoming" | "past" | "all">("upcoming");

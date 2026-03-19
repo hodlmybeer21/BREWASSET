@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 export const promoStaffTable = pgTable("promo_staff", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
+  passwordHash: text("password_hash"),
   phone: text("phone"),
   email: text("email"),
   notes: text("notes"),

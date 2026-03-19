@@ -6,7 +6,6 @@ import { eq } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "../lib/auth.js";
 import { z } from "zod";
 
-const STAFF_SHARED_PASSWORD = "staff2026";
 
 const router: IRouter = Router();
 
@@ -46,14 +45,14 @@ const staffLoginSchema = z.object({
 router.post("/staff-login", async (req: Request, res: Response) => {
   try {
     const body = staffLoginSchema.parse(req.body);
-    if (body.password !== STAFF_SHARED_PASSWORD) {
-      res.status(401).json({ error: "Invalid password" });
-      return;
-    }
     const rows = await db.select().from(promoStaffTable).where(eq(promoStaffTable.name, body.staffName));
     const staff = rows[0];
     if (!staff) {
-      res.status(404).json({ error: "Staff member not found" });
+      res.status(401).json({ error: "Invalid name or password" });
+      return;
+    }
+    if (!staff.passwordHash || !verifyPassword(body.password, staff.passwordHash)) {
+      res.status(401).json({ error: "Invalid name or password" });
       return;
     }
     req.session.staffId = staff.id;
