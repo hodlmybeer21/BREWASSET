@@ -293,8 +293,18 @@ function StaffTab() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const [newMemberPassword, setNewMemberPassword] = useState<{ name: string; password: string } | null>(null);
+
   const createMutation = useCreatePromoStaff({
-    mutation: { onSuccess: () => { toast({ title: "Staff added" }); queryClient.invalidateQueries({ queryKey: getGetPromoStaffQueryKey() }); setForm({ name: "", phone: "", email: "", notes: "" }); } }
+    mutation: {
+      onSuccess: (data: any) => {
+        queryClient.invalidateQueries({ queryKey: getGetPromoStaffQueryKey() });
+        setForm({ name: "", phone: "", email: "", notes: "" });
+        if (data?.generatedPassword) {
+          setNewMemberPassword({ name: data.name, password: data.generatedPassword });
+        }
+      }
+    }
   });
   const updateMutation = useUpdatePromoStaff({
     mutation: { onSuccess: () => { toast({ title: "Contact info updated" }); queryClient.invalidateQueries({ queryKey: getGetPromoStaffQueryKey() }); } }
@@ -352,6 +362,26 @@ function StaffTab() {
             >
               Add To Roster
             </Button>
+
+            {newMemberPassword && (
+              <div className="mt-4 rounded-md border border-[#9070d0]/40 bg-[#9070d0]/10 p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <p className="text-[10px] font-bold tracking-widest uppercase text-[#9070d0]">Portal Access Created</p>
+                  <button onClick={() => setNewMemberPassword(null)} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
+                </div>
+                <p className="text-xs text-muted-foreground">Share these credentials with <span className="text-foreground font-semibold">{newMemberPassword.name}</span>:</p>
+                <div className="rounded bg-[#0a0a0a] border border-[#9070d0]/30 px-3 py-2 flex items-center justify-between gap-2">
+                  <code className="text-sm font-mono text-[#9070d0] tracking-wider">{newMemberPassword.password}</code>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(newMemberPassword.password); toast({ title: "Copied!" }); }}
+                    className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-[#9070d0] transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground/60">This password will not be shown again.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

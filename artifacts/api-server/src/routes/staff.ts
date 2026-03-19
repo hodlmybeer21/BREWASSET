@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { promoStaffTable, eventsTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { hashPassword } from "../lib/auth.js";
 
 const router: IRouter = Router();
 
@@ -21,13 +22,17 @@ const createSchema = z.object({
 router.post("/", async (req: Request, res: Response) => {
   try {
     const body = createSchema.parse(req.body);
+    const firstName = body.name.trim().split(/\s+/)[0];
+    const plainPassword = `${firstName}2026`;
+    const passwordHash = hashPassword(plainPassword);
     const [created] = await db.insert(promoStaffTable).values({
       name: body.name,
+      passwordHash,
       phone: body.phone ?? null,
       email: body.email ?? null,
       notes: body.notes ?? null,
     }).returning();
-    res.json(created);
+    res.json({ ...created, generatedPassword: plainPassword });
   } catch (err) {
     res.status(400).json({ error: "Invalid request" });
   }
