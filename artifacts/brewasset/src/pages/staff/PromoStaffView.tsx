@@ -254,7 +254,12 @@ function EventCard({ event, staffName }: { event: any; staffName: string }) {
 export default function PromoStaffView() {
   const [, setLocation] = useLocation();
   const { data: me, isLoading: meLoading } = useGetMe();
-  const logoutMutation = useLogout({ mutation: { onSuccess: () => setLocation("/") } });
+  const logoutMutation = useLogout({
+    mutation: {
+      onSuccess: () => setLocation("/"),
+      onError: () => setLocation("/"),
+    },
+  });
   const [filter, setFilter] = useState<"upcoming" | "past" | "all">("upcoming");
 
   const staffName = me?.displayName ?? me?.username ?? "";
@@ -305,7 +310,7 @@ export default function PromoStaffView() {
           </div>
           <button
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => logoutMutation.mutate()}
+            onClick={() => logoutMutation.mutate(undefined)}
           >
             <LogOut className="w-4 h-4" />
             Logout
