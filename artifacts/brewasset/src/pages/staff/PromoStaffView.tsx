@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
   useGetMe,
@@ -269,17 +269,18 @@ export default function PromoStaffView() {
     { query: { enabled: !!staffName } }
   );
 
-  if (meLoading) {
+  useEffect(() => {
+    if (!meLoading && (!me || me.role !== "staff")) {
+      setLocation("/");
+    }
+  }, [me, meLoading, setLocation]);
+
+  if (meLoading || !me || me.role !== "staff") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
-  }
-
-  if (!me || me.role !== "staff") {
-    setLocation("/");
-    return null;
   }
 
   const now = new Date();
