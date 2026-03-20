@@ -74,6 +74,8 @@ export default function Login() {
     setActivePanel(null);
     setPassword("");
     setShowPassword(false);
+    setSelectedRep("");
+    setSelectedStaff("");
   };
 
   if (isLoading) {
@@ -161,44 +163,51 @@ export default function Login() {
               </Button>
             )}
 
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Or log in as rep</span>
-              <span className="w-full border-t border-border" />
-            </div>
-
             {/* Rep */}
-            <div className="space-y-3">
-              <Select
-                value={selectedRep}
-                onChange={(e) => {
-                  setSelectedRep(e.target.value);
-                  setPassword("");
-                  setActivePanel(e.target.value ? "rep" : null);
-                }}
-                className="h-12 bg-background/50"
-              >
-                <option value="">Select your name...</option>
-                {[...ALL_REPS]
-                  .sort((a, b) => (REP_DISPLAY_NAMES[a] || a).localeCompare(REP_DISPLAY_NAMES[b] || b))
-                  .map(rep => (
-                    <option key={rep} value={rep}>{REP_DISPLAY_NAMES[rep] || rep}</option>
-                  ))}
-              </Select>
-              {selectedRep && (
-                <PasswordField onSubmit={() => handleSubmit(selectedRep)} />
-              )}
+            {activePanel === "rep" ? (
+              <div className="space-y-3 p-4 rounded-lg border border-primary/30 bg-primary/5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Users className="w-4 h-4" />
+                    <span className="text-xs font-bold tracking-widest uppercase">Sales Rep</span>
+                  </div>
+                  <button onClick={closePanel} className="text-muted-foreground hover:text-foreground">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <Select
+                  value={selectedRep}
+                  onChange={(e) => { setSelectedRep(e.target.value); setPassword(""); }}
+                  className="h-11 bg-background/50"
+                >
+                  <option value="">Select your name...</option>
+                  {[...ALL_REPS]
+                    .sort((a, b) => (REP_DISPLAY_NAMES[a] || a).localeCompare(REP_DISPLAY_NAMES[b] || b))
+                    .map(rep => (
+                      <option key={rep} value={rep}>{REP_DISPLAY_NAMES[rep] || rep}</option>
+                    ))}
+                </Select>
+                {selectedRep && (
+                  <PasswordField onSubmit={() => handleSubmit(selectedRep)} />
+                )}
+                <Button
+                  className="w-full h-11 text-sm"
+                  onClick={() => handleSubmit(selectedRep)}
+                  disabled={!selectedRep || !password || loginMutation.isPending}
+                >
+                  {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+                </Button>
+              </div>
+            ) : (
               <Button
-                variant="outline"
-                className="w-full h-12"
-                disabled={!selectedRep || !password || loginMutation.isPending}
-                onClick={() => handleSubmit(selectedRep)}
+                className="w-full h-14 text-sm"
+                onClick={() => openPanel("rep")}
+                disabled={loginMutation.isPending}
               >
-                {loginMutation.isPending && activePanel === "rep"
-                  ? <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  : <Users className="w-4 h-4 mr-3 opacity-70" />}
-                Rep Login
+                <Users className="w-5 h-5 mr-3 opacity-70" />
+                Sales Rep Login
               </Button>
-            </div>
+            )}
 
             {/* Promo Staff */}
             {activePanel === "staff" ? (
