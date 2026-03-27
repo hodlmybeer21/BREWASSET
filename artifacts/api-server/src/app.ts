@@ -4,10 +4,12 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import router from "./routes/index.js";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// In bundled CommonJS, __dirname is available directly
+// Build output: /app/artifacts/api-server/dist/index.js
+// Frontend build: /app/artifacts/brewasset/dist/public
+const __dirname = path.resolve();
+const distPath = path.resolve(__dirname, "../../brewasset/dist/public");
 
 const app: Express = express();
 
@@ -34,8 +36,6 @@ app.use("/api", router);
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 // Serve frontend static files from brewasset dist
-// Render clones to /app so use absolute path
-const distPath = "/app/artifacts/brewasset/dist/public";
 app.use(express.static(distPath));
 
 // Fallback to index.html for SPA routes
