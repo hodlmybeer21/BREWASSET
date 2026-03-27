@@ -30,6 +30,9 @@ app.use(session({
 // Serve API routes
 app.use("/api", router);
 
+// Health check
+app.get("/health", (_req, res) => res.json({ status: "ok" }));
+
 // Serve frontend static files from brewasset dist
 const distPath = path.resolve(__dirname, "../../brewasset/dist/public");
 app.use(express.static(distPath));
