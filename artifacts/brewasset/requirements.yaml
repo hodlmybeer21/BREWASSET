@@ -1,0 +1,16 @@
+packages:
+  "framer-motion": "For smooth transitions and micro-interactions"
+  "date-fns": "For formatting dates in the calendar and history views"
+  "clsx": "For conditional class names in custom UI components"
+  "tailwind-merge": "For merging Tailwind classes in custom UI components"
+  "lucide-react": "For UI icons"
+
+images:
+  - path: "artifacts/brewasset/public/images/login-bg.png"
+    description: "Dark, moody, cinematic photography of an industrial brewery warehouse with tall steel racks, amber lighting, and deep shadows, minimalist and professional"
+    aspect_ratio: "16:9"
+
+notes:
+  - Hooks are imported from @workspace/api-client-react as per the monorepo structure
+  - Utilizing Wouter for routing and TanStack Query for remote state
+  - Using a custom industrial-themed component system built on Tailwind to match the requested design aesthetic

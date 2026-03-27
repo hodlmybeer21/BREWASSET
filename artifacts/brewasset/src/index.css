@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: 'DM Mono', monospace;
+  --font-mono: 'DM Mono', monospace;
+
+  --color-background: #0a0a0a;
+  --color-foreground: #ede8df;
+  
+  --color-surface: #141414;
+  --color-surface2: #1f1f1f;
+  
+  --color-border: #292929;
+  --color-border2: #333333;
+  
+  --color-primary: #e8a020;
+  --color-primary-foreground: #0a0a0a;
+  
+  --color-secondary: #262626;
+  --color-secondary-foreground: #ede8df;
+  
+  --color-muted: #1f1f1f;
+  --color-muted-foreground: #808080;
+  
+  --color-accent: #e8a020;
+  --color-accent-foreground: #0a0a0a;
+  
+  --color-destructive: #e53e3e;
+  --color-destructive-foreground: #ffffff;
+  
+  --color-success: #4aaa7a;
+  --color-success-foreground: #0a0a0a;
+  
+  --color-warning: #ff9900;
+  --color-warning-foreground: #0a0a0a;
+}
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ede8df;
+  --border: #292929;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-mono antialiased bg-background text-foreground overflow-x-hidden;
+  }
+  
+  /* Custom Scrollbar for industrial feel */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: #121212;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #333333;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #e8a020;
+  }
+  
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer utilities {
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  }
+}
