@@ -13,7 +13,7 @@ router.get("/", async (req: Request, res: Response) => {
     .orderBy(desc(posRequestsTable.createdAt));
 
   const filtered = req.query.repUsername
-    ? rows.filter(r => r.repUsername === req.query.repUsername)
+    ? rows.filter(r => r.repUsername === (req.query.repUsername as string))
     : rows;
 
   res.json(filtered.map(r => ({
@@ -77,7 +77,7 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 router.post("/:id/fulfill", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
@@ -116,7 +116,7 @@ router.post("/:id/fulfill", async (req: Request, res: Response) => {
 });
 
 router.post("/:id/cancel", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
 
   // Get the request to restore inventory
   const reqs = await db.select().from(posRequestsTable).where(eq(posRequestsTable.id, id));

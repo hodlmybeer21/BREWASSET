@@ -68,7 +68,7 @@ function RequestItemsTab() {
 
   const { data: customerData } = useGetCustomers(
     { repUsername: user?.username },
-    { query: { enabled: !!user?.username } }
+    { queryKey: ['customers'], enabled: !!user?.username }
   );
 
   const items = inventory || [];
@@ -283,7 +283,7 @@ function AccountsTab() {
   const { data: assets } = useGetAccountAssets({ repUsername: user?.username || "" });
   const { data: customers } = useGetCustomers(
     { repUsername: user?.username },
-    { query: { enabled: !!user?.username } }
+    { queryKey: ['customers'], enabled: !!user?.username }
   );
   const [filterType, setFilterType] = useState("All");
   const [search, setSearch] = useState("");
@@ -468,7 +468,7 @@ function TransferModal({ isOpen, onClose, data }: { isOpen: boolean, onClose: ()
   const { data: user } = useGetMe();
   const { data: customerData } = useGetCustomers(
     { repUsername: user?.username },
-    { query: { enabled: !!user?.username } }
+    { queryKey: ['customers'], enabled: !!user?.username }
   );
 
   const transferMutation = useCreateTransfer({
@@ -670,7 +670,7 @@ function EventsTab() {
 
   const { data: customerData } = useGetCustomers(
     { repUsername: user?.username },
-    { query: { enabled: !!user?.username } }
+    { queryKey: ['customers'], enabled: !!user?.username }
   );
   const customers = (customerData || []).map(c => c.name);
   const allBrands = [...new Set(Object.values(BRANDS_BY_ITEM).flat())];

@@ -37,7 +37,7 @@ router.post("/items", async (req: Request, res: Response) => {
 });
 
 router.delete("/items/:id", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   await db.delete(brandsTable).where(eq(brandsTable.catalogItemId, id));
   await db.delete(catalogItemsTable).where(eq(catalogItemsTable.id, id));
   res.json({ success: true, message: "Item type removed" });
@@ -63,7 +63,7 @@ router.post("/brands", async (req: Request, res: Response) => {
 });
 
 router.delete("/brands/:id", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   await db.delete(brandsTable).where(eq(brandsTable.id, id));
   res.json({ success: true, message: "Brand removed" });
 });

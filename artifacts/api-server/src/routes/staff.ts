@@ -40,7 +40,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const body = createSchema.parse(req.body);
 
     // If name changed, update event assignments
@@ -69,7 +69,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 });
 
 router.delete("/:id", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   const existing = await db.select().from(promoStaffTable).where(eq(promoStaffTable.id, id));
   if (existing[0]) {
     // Remove from events

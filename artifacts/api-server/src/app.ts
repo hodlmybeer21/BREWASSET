@@ -3,6 +3,11 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import router from "./routes/index.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app: Express = express();
 
@@ -22,6 +27,16 @@ app.use(session({
   },
 }));
 
+// Serve API routes
 app.use("/api", router);
+
+// Serve frontend static files from brewasset dist
+const distPath = path.resolve(__dirname, "../../brewasset/dist/public");
+app.use(express.static(distPath));
+
+// Fallback to index.html for SPA routes
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(distPath, "index.html"));
+});
 
 export default app;

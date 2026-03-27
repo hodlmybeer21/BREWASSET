@@ -19,13 +19,14 @@ function parseEvent(e: typeof eventsTable.$inferSelect) {
 router.get("/", async (req: Request, res: Response) => {
   const rows = await db.select().from(eventsTable).orderBy(desc(eventsTable.createdAt));
   let filtered = rows;
-  if (req.query.repUsername) {
-    filtered = rows.filter(r => r.repUsername === req.query.repUsername);
-  } else if (req.query.staffName) {
-    const name = req.query.staffName as string;
+  const repUsername = req.query.repUsername as string | undefined;
+  const staffNameParam = req.query.staffName as string | undefined;
+  if (repUsername) {
+    filtered = rows.filter(r => r.repUsername === repUsername);
+  } else if (staffNameParam) {
     filtered = rows.filter(r => {
       const assigned: string[] = JSON.parse(r.staffAssigned || "[]");
-      return assigned.includes(name);
+      return assigned.includes(staffNameParam);
     });
   }
   res.json(filtered.map(parseEvent));
@@ -77,7 +78,7 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 router.post("/:id/approve", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   await db.update(eventsTable)
     .set({ status: "approved", approvedAt: new Date(), approvedBy: "Marketing Manager" })
     .where(eq(eventsTable.id, id));
@@ -85,7 +86,7 @@ router.post("/:id/approve", async (req: Request, res: Response) => {
 });
 
 router.post("/:id/cancel", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   await db.update(eventsTable).set({ status: "cancelled" }).where(eq(eventsTable.id, id));
   res.json({ success: true, message: "Event cancelled" });
 });
@@ -94,7 +95,7 @@ const toggleStaffSchema = z.object({ staffName: z.string() });
 
 router.post("/:id/staff", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const body = toggleStaffSchema.parse(req.body);
 
     const events = await db.select().from(eventsTable).where(eq(eventsTable.id, id));
@@ -117,7 +118,7 @@ router.post("/:id/staff", async (req: Request, res: Response) => {
 });
 
 router.post("/:id/approve-pos", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   await db.update(eventsTable).set({ posApproved: true }).where(eq(eventsTable.id, id));
   res.json({ success: true, message: "POS approved" });
 });
@@ -143,7 +144,7 @@ const reportSchema = z.object({
 });
 
 router.get("/:id/report", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id as string);
   const staffName = req.query.staffName as string | undefined;
   let query = db.select().from(eventReportsTable).where(eq(eventReportsTable.eventId, id));
   const reports = await query;
@@ -154,7 +155,7 @@ router.get("/:id/report", async (req: Request, res: Response) => {
 
 router.post("/:id/report", async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const body = reportSchema.parse(req.body);
 
     const existing = await db.select().from(eventReportsTable)
