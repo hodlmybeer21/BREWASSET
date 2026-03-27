@@ -34,7 +34,8 @@ app.use("/api", router);
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 // Serve frontend static files from brewasset dist
-const distPath = path.resolve(__dirname, "../../brewasset/dist/public");
+// Render clones to /app so use absolute path
+const distPath = "/app/artifacts/brewasset/dist/public";
 app.use(express.static(distPath));
 
 // Fallback to index.html for SPA routes
