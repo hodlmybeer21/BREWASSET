@@ -1,0 +1,17 @@
+services:
+  - name: brewasset
+    repo: https://github.com/hodlmybeer21/BREWASSET
+    region: oregon
+    plan: free
+    buildCommand: npm install -g pnpm && pnpm install && pnpm --filter @workspace/api-server build && pnpm --filter @workspace/brewasset build
+    startCommand: node artifacts/api-server/dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        value: brewasset-secret-2026
+      - key: BASE_PATH
+        value: /
