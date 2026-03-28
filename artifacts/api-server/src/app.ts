@@ -5,11 +5,9 @@ import session from "express-session";
 import router from "./routes/index.js";
 import path from "path";
 
-// In bundled CommonJS, __dirname is available directly
 // Build output: /app/artifacts/api-server/dist/index.js
 // Frontend build: /app/artifacts/brewasset/dist/public
-const __dirname = path.resolve();
-const distPath = path.resolve(__dirname, "../../brewasset/dist/public");
+const distPath = path.resolve(process.cwd(), "../../brewasset/dist/public");
 
 const app: Express = express();
 
