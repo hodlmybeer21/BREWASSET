@@ -5,9 +5,9 @@ import session from "express-session";
 import router from "./routes/index.js";
 import path from "path";
 
-// Build output: /app/artifacts/api-server/dist/index.js
-// Frontend build: /app/artifacts/brewasset/dist/public
-const distPath = path.resolve(process.cwd(), "../../brewasset/dist/public");
+// Bundled at: artifacts/api-server/dist/index.cjs
+// Frontend at: artifacts/brewasset/dist/public
+const distPath = path.resolve(__dirname, "../../brewasset/dist/public");
 
 const app: Express = express();
 
@@ -37,7 +37,7 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use(express.static(distPath));
 
 // Fallback to index.html for SPA routes
-app.get("*", (_req, res) => {
+app.get("/{*splat}", (_req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
 
