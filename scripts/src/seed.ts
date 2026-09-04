@@ -7,12 +7,10 @@ import {
   promoStaffTable,
   accountAssetsTable,
 } from "@workspace/db/schema";
-import { createHash, randomBytes } from "crypto";
+import bcrypt from "bcryptjs";
 
-function hashPassword(password: string): string {
-  const salt = randomBytes(16).toString("hex");
-  const hash = createHash("sha256").update(salt + password).digest("hex");
-  return `${salt}:${hash}`;
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
 }
 
 const ITEM_TYPES = [
@@ -72,40 +70,44 @@ const ACCOUNT_ASSETS: Record<string, Record<string, Array<{item:string;brand:str
 async function main() {
   console.log("Seeding database...");
 
-  // 1. Create users
-  const defaultPassword = hashPassword("brewasset2026");
-
-  // Check if users already exist
+  // 1. Create users — passwords ONLY from env (never hardcoded in repo)
+  // Set SEED_DEFAULT_PASSWORD (reps) and optionally SEED_WAREHOUSE_PASSWORD /
+  // SEED_MARKETING_PASSWORD before running. Values are never logged.
   const existingUsers = await db.select().from(usersTable);
   if (existingUsers.length === 0) {
-    console.log("Creating users...");
-
-    // Warehouse staff
-    await db.insert(usersTable).values({
-      username: "warehouse",
-      passwordHash: hashPassword("warehouse123"),
-      role: "warehouse",
-      displayName: "Warehouse Staff",
-    });
-
-    // Marketing manager
-    await db.insert(usersTable).values({
-      username: "marketing",
-      passwordHash: hashPassword("marketing123"),
-      role: "marketing",
-      displayName: "Marketing Manager",
-    });
-
-    // All reps
-    for (const rep of ALL_REPS) {
+    const seedDefault = process.env.SEED_DEFAULT_PASSWORD;
+    const seedWarehouse = process.env.SEED_WAREHOUSE_PASSWORD || seedDefault;
+    const seedMarketing = process.env.SEED_MARKETING_PASSWORD || seedDefault;
+    if (!seedDefault || !seedWarehouse || !seedMarketing) {
+      console.error(
+        "Skipping user seed: set SEED_DEFAULT_PASSWORD (and optionally SEED_WAREHOUSE_PASSWORD / SEED_MARKETING_PASSWORD). " +
+          "No plaintext passwords are stored in the repo.",
+      );
+    } else {
+      console.log("Creating users from SEED_*_PASSWORD env vars (values not printed)...");
+      const defaultPassword = await hashPassword(seedDefault);
       await db.insert(usersTable).values({
-        username: rep,
-        passwordHash: defaultPassword,
-        role: "rep",
-        displayName: rep.charAt(0).toUpperCase() + rep.slice(1),
-      }).onConflictDoNothing();
+        username: "warehouse",
+        passwordHash: await hashPassword(seedWarehouse),
+        role: "warehouse",
+        displayName: "Warehouse Staff",
+      });
+      await db.insert(usersTable).values({
+        username: "marketing",
+        passwordHash: await hashPassword(seedMarketing),
+        role: "marketing",
+        displayName: "Marketing Manager",
+      });
+      for (const rep of ALL_REPS) {
+        await db.insert(usersTable).values({
+          username: rep,
+          passwordHash: defaultPassword,
+          role: "rep",
+          displayName: rep.charAt(0).toUpperCase() + rep.slice(1),
+        }).onConflictDoNothing();
+      }
+      console.log(`Created ${ALL_REPS.length + 2} users`);
     }
-    console.log(`Created ${ALL_REPS.length + 2} users`);
   } else {
     console.log("Users already exist, skipping...");
   }

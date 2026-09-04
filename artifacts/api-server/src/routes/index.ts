@@ -10,11 +10,17 @@ import catalogRouter from "./catalog.js";
 import accountsRouter from "./accounts.js";
 import usersRouter from "./users.js";
 import customersRouter from "./customers.js";
+import { requireAuth } from "../middlewares/auth.js";
 
 const router: IRouter = Router();
 
+// Public: health + auth (login/logout/me)
 router.use(healthRouter);
 router.use("/auth", authRouter);
+
+// All data routes require an authenticated session
+router.use(requireAuth);
+
 router.use("/inventory", inventoryRouter);
 router.use("/requests", requestsRouter);
 router.use("/events", eventsRouter);

@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "@workspace/db": "workspace:*",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
     "@types/node": "catalog:",
