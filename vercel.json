@@ -1,10 +1,13 @@
 {
-  "installCommand": "npm install -g pnpm@9 && pnpm install",
+  "installCommand": "corepack enable && corepack prepare pnpm@9.15.9 --activate && pnpm install",
   "buildCommand": "pnpm --filter @workspace/api-server build && pnpm --filter @workspace/brewasset build",
   "outputDirectory": "artifacts/brewasset/dist/public",
   "framework": null,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api" }
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
   ],
   "functions": {
     "api/index.js": {
