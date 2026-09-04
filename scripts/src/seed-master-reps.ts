@@ -1,16 +1,14 @@
 import { db, pool } from "@workspace/db";
 import { usersTable, accountAssetsTable } from "@workspace/db/schema";
-import { createHash, randomBytes } from "crypto";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import bcrypt from "bcryptjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-function hashPassword(password: string): string {
-  const salt = randomBytes(16).toString("hex");
-  const hash = createHash("sha256").update(salt + password).digest("hex");
-  return `${salt}:${hash}`;
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
 }
 
 const MASTER_REPS: Array<{ username: string; displayName: string }> = [
@@ -53,9 +51,17 @@ const masterUsernames = new Set(MASTER_REPS.map(r => r.username));
 
 async function main() {
   console.log("Updating master rep list in database...");
-  const defaultPw = hashPassword("brewasset2026");
+  const seedDefault = process.env.SEED_DEFAULT_PASSWORD;
+  let defaultPw: string | null = null;
+  if (seedDefault) {
+    defaultPw = await hashPassword(seedDefault);
+  } else {
+    console.warn(
+      "SEED_DEFAULT_PASSWORD not set — new reps will not be inserted (existing display names still updated).",
+    );
+  }
 
-  // Upsert all master reps — insert new ones, update display names for existing
+  // Upsert all master reps — insert new ones only when SEED_DEFAULT_PASSWORD is set
   for (const rep of MASTER_REPS) {
     const existing = await pool.query(
       "SELECT id FROM users WHERE username = $1",
@@ -66,7 +72,7 @@ async function main() {
         "UPDATE users SET display_name = $1 WHERE username = $2",
         [rep.displayName, rep.username]
       );
-    } else {
+    } else if (defaultPw) {
       await db.insert(usersTable).values({
         username: rep.username,
         passwordHash: defaultPw,
@@ -74,6 +80,8 @@ async function main() {
         displayName: rep.displayName,
       });
       console.log(`  + Added new rep: ${rep.username} (${rep.displayName})`);
+    } else {
+      console.log(`  ! Skipped new rep (no SEED_DEFAULT_PASSWORD): ${rep.username}`);
     }
   }
   console.log(`Updated ${MASTER_REPS.length} master reps`);

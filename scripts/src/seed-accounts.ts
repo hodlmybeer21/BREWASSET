@@ -1,14 +1,12 @@
 import { db } from "@workspace/db";
 import { accountAssetsTable, usersTable, inventoryTable } from "@workspace/db/schema";
-import { createHash, randomBytes } from "crypto";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import bcrypt from "bcryptjs";
 
-function hashPassword(password: string): string {
-  const salt = randomBytes(16).toString("hex");
-  const hash = createHash("sha256").update(salt + password).digest("hex");
-  return `${salt}:${hash}`;
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -18,20 +16,27 @@ const ASSET_DATA: Array<{rep:string;account:string;item:string;brand:string;coun
 async function main() {
   console.log(`Seeding account assets from Excel data (${ASSET_DATA.length} rows)...`);
 
-  const defaultPw = hashPassword("brewasset2026");
+  const seedDefault = process.env.SEED_DEFAULT_PASSWORD;
   const newReps = [
     { username: "tjebol", displayName: "T. Jebol" },
     { username: "tpiccinono", displayName: "T. Piccinono" },
   ];
-  for (const r of newReps) {
-    await db.insert(usersTable).values({
-      username: r.username,
-      passwordHash: defaultPw,
-      role: "rep" as const,
-      displayName: r.displayName,
-    }).onConflictDoNothing();
+  if (!seedDefault) {
+    console.warn(
+      "SEED_DEFAULT_PASSWORD not set — skipping new rep user creation (tjebol, tpiccinono).",
+    );
+  } else {
+    const defaultPw = await hashPassword(seedDefault);
+    for (const r of newReps) {
+      await db.insert(usersTable).values({
+        username: r.username,
+        passwordHash: defaultPw,
+        role: "rep" as const,
+        displayName: r.displayName,
+      }).onConflictDoNothing();
+    }
+    console.log("Ensured new rep users exist (tjebol, tpiccinono)");
   }
-  console.log("Ensured new rep users exist (tjebol, tpiccinono)");
 
   await db.update(inventoryTable).set({ quantity: 0 });
   console.log("Zeroed all inventory quantities");
