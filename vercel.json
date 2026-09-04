@@ -1,0 +1,14 @@
+{
+  "installCommand": "npm install -g pnpm@9 && pnpm install",
+  "buildCommand": "pnpm --filter @workspace/api-server build && pnpm --filter @workspace/brewasset build",
+  "framework": null,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api" }
+  ],
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "artifacts/brewasset/dist/public/**",
+      "maxDuration": 60
+    }
+  }
+}
