@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Package, History, CheckSquare, PlusSquare, Search, Box } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { HoldToTalk } from "@/components/pwa/HoldToTalk";
+import { CameraCapture } from "@/components/pwa/CameraCapture";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 export default function WarehouseView() {
   const [tab, setTab] = useState("inventory");
@@ -24,14 +27,46 @@ export default function WarehouseView() {
   ];
 
   return (
-    <AppLayout navItems={navItems} currentTab={tab} onTabChange={setTab}>
-      {tab === "inventory" && <InventoryTab />}
-      {tab === "receive" && <ReceiveTab />}
-      {tab === "requests" && <RequestsTab />}
-      {tab === "history" && <HistoryTab />}
-      {tab === "catalog" && <CatalogTab />}
-    </AppLayout>
+    <>
+      <AppLayout navItems={navItems} currentTab={tab} onTabChange={setTab}>
+        {tab === "inventory" && <InventoryTab />}
+        {tab === "receive" && <ReceiveTab />}
+        {tab === "requests" && <RequestsTab />}
+        {tab === "history" && <HistoryTab />}
+        {tab === "catalog" && <CatalogTab />}
+        <DockSpacer />
+      </AppLayout>
+      <QuickCaptureDock />
+      <InstallPrompt />
+    </>
   );
+}
+
+/**
+ * Fixed bottom dock on the warehouse persona — quick capture entry points
+ * for the voice + photo pipelines. Handlers are stubbed for Chunk 1; the
+ * real STT + vision + agent plumbing lands in Chunks 2/3.
+ */
+function QuickCaptureDock() {
+  return (
+    <div
+      className="fixed bottom-0 inset-x-0 z-40 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] pointer-events-none"
+      aria-label="Quick capture"
+    >
+      <div className="max-w-xl mx-auto grid grid-cols-2 gap-2 pointer-events-auto">
+        <HoldToTalk />
+        <CameraCapture />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Page-level bottom padding so the fixed QuickCaptureDock doesn't cover the
+ * last row of inventory tables on desktop or iOS home indicator on mobile.
+ */
+function DockSpacer() {
+  return <div aria-hidden="true" className="h-24 sm:h-20" />;
 }
 
 function InventoryTab() {
